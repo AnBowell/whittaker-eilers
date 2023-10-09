@@ -4,26 +4,19 @@ use sprs::{CsMat, CsMatView};
 use sprs_ldl::{Ldl, LdlNumeric};
 
 use crate::errors::WhittakerError;
+use crate::WHITTAKER_X_EPSILON;
 
-/// When using vals_x, the Whittaker smoother will divide by the differences of adjacent vals_x. This can result by division by 0 and therefore NaNs
-/// Checking for this behavior in vals_x beforehand prevents this.
-pub const WHITTAKER_X_EPSILON: f64 = 1e-6;
-
-/// Whitaker-Eilers Smoothing and Interpolation
+/// Whitaker-Eilers Smoother and Interpolator
 ///
-/// A discrete-time version of spline smoothing for equally or unequally spaced data.
-///
-/// The idea behind this struct is for it to be reusable. For any given time-series you may have a single sampling frequency, but
-/// many measurements you which to be smoothed.
+/// The smoother must be created via [WhittakerSmoother::new()] and once created, can be reused to smooth multiple sets of data as
+/// efficiently as possible. You can update `lambda`, the smoothness; the order of the smoother `order`; the measurement `weights`; or the sample
+/// times/positions `x_input` through the provided functions. They enable you to control the smoother without remaking costly matrices.
 ///
 pub struct WhittakerSmoother {
-    ///  Smoothing constant. The larger lambda is, the smoother the output.
-    pub lambda: f64,
-    /// The order of the filter.
-    pub order: usize,
-    /// The length of the data to be smoothed.
-    pub data_length: usize,
-    vals_x: Option<Vec<f64>>,
+    lambda: f64,
+    order: usize,
+    data_length: usize,
+    x_input: Option<Vec<f64>>,
     e_mat: CsMat<f64>,
     d_mat: CsMat<f64>,
     weights_mat: Option<CsMat<f64>>,
@@ -32,32 +25,27 @@ pub struct WhittakerSmoother {
 }
 
 impl WhittakerSmoother {
-    /// Creates a new Whittaker smoother.
+    /// Create a new Whittaker-Eilers smoother and interpolator.
     ///
-    /// This function should be used to create a new instance of the Whittaker smoother. A smoothing value, order, and length of d
-    /// data should always be provided. If you wish to smooth non equally spaced data a `vals_x` must also be provided. If you wish to
-    /// smooth data, applying different weights to your measurements, provide a `weights`. The Whittaker smoother can also be used to interpolate data
-    /// by setting the measurement's weight to 0.
+    /// The smoother is configured through it's `lambda` and it's `order`. `Lambda` controls the smoothness of the data and `order` controls
+    /// the order of which the penalities are applied (generally 2 - 4). The smoother can then be configured to weight measurements between 0 and 1
+    /// to interpolate (0 weight) or to complete trust (1 weight) the measurement. The smoother can handle equally spaced measurements by simply not passing
+    /// an `x_input` or unequally spaced data by providing the sampling times/positions as `x_input`.
     ///
-    /// The smoother can later have it's weights, lambda, and order changed without creating a new struct. However, if you wish to change the length of data to be smoothed,
-    /// a new [WhittakerSmoother] should be constructed.
+    /// The smoother parameters can be updated using the provided functions to avoid remaking this costly struct. The only time the [WhittakerSmoother] should be
+    /// remade is when the data length has changed, or a different sampling rate has been provided.
     ///
     /// # Arguments:
     /// * `lambda`: Controls the smoothing strength, the larger, the smoother.
     /// * `order`: The order of the filter.
     /// * `data_length`: The length of the data which is to be smoothed.
-    /// * `vals_x`: The time/position at which the y measurement was taken. Used to smooth unequally spaced data. Must be monotonically increasing.
+    /// * `x_input`: The time/position at which the y measurement was taken. Used to smooth unequally spaced data. Must be monotonically increasing.
     /// * `weights`: The weight of each y measurement.
-    ///
-    /// # Returns
-    ///
-    /// Result with a new WhittakerSmoother if creation was successful.
-    ///
     pub fn new(
         lambda: f64,
         order: usize,
         data_length: usize,
-        vals_x: Option<&Vec<f64>>,
+        x_input: Option<&Vec<f64>>,
         weights: Option<&Vec<f64>>,
     ) -> Result<WhittakerSmoother, WhittakerError> {
         let e_mat: CsMat<f64> = CsMat::eye(data_length);
@@ -66,7 +54,7 @@ impl WhittakerSmoother {
             return Err(WhittakerError::DataTooShort(data_length, order));
         }
 
-        let (d_mat, cloned_vals_x) = match vals_x {
+        let (d_mat, cloned_vals_x) = match x_input {
             Some(x_vec) => {
                 if data_length != x_vec.len() {
                     return Err(WhittakerError::LengthMismatch(data_length, x_vec.len()));
@@ -122,7 +110,7 @@ impl WhittakerSmoother {
             lambda,
             order,
             data_length,
-            vals_x: cloned_vals_x,
+            x_input: cloned_vals_x,
             e_mat,
             d_mat,
             weights_mat,
@@ -131,15 +119,27 @@ impl WhittakerSmoother {
         });
     }
 
+    /// Retrieve the smoother's current lambda.
+    pub fn get_lambda(&self) -> f64 {
+        self.lambda
+    }
+
+    /// Retrieve the smoother's current order.
+    pub fn get_order(&self) -> usize {
+        self.order
+    }
+
+    /// Retrieve the length of the smoother's data.
+    pub fn get_data_length(&self) -> usize {
+        self.data_length
+    }
+
     /// Updates the weights of the data to be smoothed.
     ///
-    /// The number of weights added should be equal to that of the data you are to smooth. They should ideally fall between 0 and 1.
+    /// The length of weights should be equal to that of the data you are to smooth. The values of the weights should fall between 0 and 1.
     ///
     /// # Arguments:
     /// * `weights`: The weights of the measurements to be smoothed. The smaller the weight the more the measurement will be ignored. Setting a weight to 0 results in interpolation.
-    ///
-    /// # Returns
-    /// `Result<(),WhittakerError>`: Updates the struct successfully, or returns an error.
     pub fn update_weights(&mut self, weights: &Vec<f64>) -> Result<(), WhittakerError> {
         if self.data_length != weights.len() {
             return Err(WhittakerError::LengthMismatch(
@@ -163,15 +163,12 @@ impl WhittakerSmoother {
         Ok(())
     }
 
-    /// Updates the order of the Whittaker smoother.
+    /// Updates the order of the Whittaker-Eilers smoother.
     ///
     /// Efficiently updates the order at which the Whittaker will use to smooth the data.
     ///
     /// # Arguments:
     /// * `order`: The order to smooth.
-    ///
-    /// # Returns
-    /// `Result<(),WhittakerError>`: Updates the struct successfully, or returns an error.
     pub fn update_order(&mut self, order: usize) -> Result<(), WhittakerError> {
         if self.data_length < order {
             return Err(WhittakerError::DataTooShort(self.data_length, order));
@@ -179,7 +176,7 @@ impl WhittakerSmoother {
 
         self.order = order;
 
-        self.d_mat = match &self.vals_x {
+        self.d_mat = match &self.x_input {
             Some(x) => ddmat(x, x.len(), order),
             None => diff_no_ddmat(&self.e_mat, order),
         };
@@ -188,15 +185,12 @@ impl WhittakerSmoother {
         Ok(())
     }
 
-    /// Updates the smoothing constant
+    /// Updates the smoothing constant `lambda` of the Whittaker-Eilers smoother.
     ///
     /// Efficiently update the target smoothness of the Whittaker smoother. The larger the `lambda`, the smoother the data.
     ///
     /// # Arguments:
-    /// * `lambda`: The smoothing constant of the Whittaker smoother.
-    ///
-    /// # Returns
-    /// `Result<(),WhittakerError>`: Updates the struct successfully, or returns an error.
+    /// * `lambda`: The smoothing constant of the Whittaker-Eilers smoother.
     pub fn update_lambda(&mut self, lambda: f64) -> Result<(), WhittakerError> {
         self.lambda = lambda;
 
@@ -214,23 +208,22 @@ impl WhittakerSmoother {
         Ok(())
     }
 
-    /// Run Whittaker smoothing on values.
+    /// Run Whittaker-Eilers smoothing and interpolation.
     ///
     /// This function actually runs the solver which results in the smoothed data. If you just wish to continuously smooth
     /// data of different y values with the sample rate remaining the same, simply call this function with different data. Remaking the `WhittakerSmoother` struct
     /// will result in a lot of overhead.
     ///
     /// # Arguments
-    /// * `vals_y`: The values which are to be smoothed by the Whittaker smoother.
+    /// * `vals_y`: The values which are to be smoothed and interpolated by the Whittaker-Eilers smoother.
     ///
-    /// # Returns
-    /// `Result<Vec<f64>, WhittakerError>`: Returns the smoothed/interpolated data or an error.
-    ///
-    pub fn smooth(&self, vals_y: &[f64]) -> Result<Vec<f64>, WhittakerError> {
-        if vals_y.len() != self.data_length {
+    /// # Returns:
+    /// The smoothed and interpolated data.
+    pub fn smooth(&self, y_input: &[f64]) -> Result<Vec<f64>, WhittakerError> {
+        if y_input.len() != self.data_length {
             return Err(WhittakerError::LengthMismatch(
                 self.data_length,
-                vals_y.len(),
+                y_input.len(),
             ));
         }
         return if self.weights_mat.is_some() {
@@ -240,12 +233,12 @@ impl WhittakerSmoother {
                     .unwrap()
                     .data()
                     .iter()
-                    .zip(vals_y)
+                    .zip(y_input)
                     .map(|(a, b)| a * b)
                     .collect::<Vec<f64>>(),
             ))
         } else {
-            Ok(self.ldl.solve(vals_y))
+            Ok(self.ldl.solve(y_input))
         };
     }
 }
@@ -256,9 +249,6 @@ impl WhittakerSmoother {
 /// * `x`: Sampling positions.
 /// * `size`: Length og the data.
 /// * `d`: order of differences.
-///
-/// # Returns
-/// A sparse matrix containing the divided differences of order d.
 fn ddmat(x: &[f64], size: usize, d: usize) -> CsMat<f64> {
     if d == 0 {
         return CsMat::eye(size);
