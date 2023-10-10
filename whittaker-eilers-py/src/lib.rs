@@ -1,38 +1,31 @@
 use pyo3::prelude::*;
-use rand::Rng;
-use std::cmp::Ordering;
-use std::io;
 
-#[pyfunction]
-fn guess_the_number() {
-    println!("Guess the number!");
+use whittaker_eilers_rs::WhittakerSmoother as WhittakerSmootherRs;
 
-    let secret_number = rand::thread_rng().gen_range(1..101);
+#[pyclass]
+struct WhittakerSmoother(WhittakerSmootherRs);
 
-    loop {
-        println!("Please input your guess.");
+#[pymethods]
+impl WhittakerSmoother {
+    // pub(crate) fn new(ws: WhittakerSmootherRs) -> Self {
+    //     WhittakerSmoother(ws)
+    // }
+    #[new]
+    pub fn __init__(
+        lambda: f64,
+        order: usize,
+        data_length: usize,
+        x_input: Vec<f64>,
+        weights: Vec<f64>,
+    ) -> PyResult<Self> {
+        Ok(WhittakerSmoother(
+            WhittakerSmootherRs::new(lambda, order, data_length, Some(&x_input), Some(&weights))
+                .unwrap(),
+        ))
+    }
 
-        let mut guess = String::new();
-
-        io::stdin()
-            .read_line(&mut guess)
-            .expect("Failed to read line");
-
-        let guess: u32 = match guess.trim().parse() {
-            Ok(num) => num,
-            Err(_) => continue,
-        };
-
-        println!("You guessed: {}", guess);
-
-        match guess.cmp(&secret_number) {
-            Ordering::Less => println!("Too small!"),
-            Ordering::Greater => println!("Too big!"),
-            Ordering::Equal => {
-                println!("You win!");
-                break;
-            }
-        }
+    pub fn get_order(&self) -> usize {
+        self.0.get_order()
     }
 }
 
@@ -41,7 +34,6 @@ fn guess_the_number() {
 /// import the module.
 #[pymodule]
 fn whittaker_eilers(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(guess_the_number, m)?)?;
-
+    m.add_class::<WhittakerSmoother>()?;
     Ok(())
 }
