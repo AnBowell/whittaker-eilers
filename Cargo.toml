@@ -1,6 +1,6 @@
 [package]
 name = "whittaker-eilers"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 description = "A sparse matrix implementation of Whittaker-Eilers smoothing and interpolation"
@@ -11,6 +11,7 @@ keywords = ["smoothing", "interpolation", "filter", "signal-processing"]
 categories = ["algorithms", "mathematics", "science"]
 repository = "https://github.com/AnBowell/whittaker-eilers"
 homepage = "https://github.com/AnBowell/whittaker-eilers"
+documentation = "https://docs.rs/whittaker-eilers/latest/whittaker_eilers/"
 readme = "README.md"
 
 
