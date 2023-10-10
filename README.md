@@ -1,5 +1,5 @@
 # Whittaker-Eilers Smoothing and Interpolation
-**The Whittaker-Eilers smoother is the perfect smoother.** It offers extremely quick, efficient smoothing with built-in interpolation via weights on each measurement. This crate provides a sparse-matrix implementation for additional speed and memory efficiency and can handle both equally and unequally spaced measurements
+**The Whittaker-Eilers smoother is the perfect smoother.** It offers extremely quick, efficient smoothing with built-in interpolation via weights on each measurement. This crate provides a sparse-matrix implementation for additional speed and memory efficiency and can handle both equally and unequally spaced measurements.
 
 ---
 
@@ -46,7 +46,7 @@ println!("Smoothed data: {:?}", smoothed_data);
 
 ```
 
-### Weighted data
+### Weighted data & Interpolation
 Each measurement can then be weighted to trust some measurements more than others. Setting `weights` to 0 for measurements will lead to interpolation. 
 ```rust
 use whittaker_eilers::WhittakerSmoother;
@@ -69,6 +69,9 @@ You can use these methods in combination with each other for instance, interpola
 
 <img src="/examples/images/smoothed_data.png" alt="Time-series smoothed by Whittaker-Eilers method" width="800" />
 
+## Future Features
+- Cross validation options to find optimal lambda.
+- Scatter plot smoothing
 
 ## References
 The algorithm implemented here mirrors a 2003 implementation by Paul H. C. Eilers in Matlab. I've included scripts and data from the original paper in the tests for this crate. The original paper and code can be found here:
