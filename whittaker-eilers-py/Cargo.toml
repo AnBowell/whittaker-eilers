@@ -11,7 +11,7 @@ name = "whittaker_eilers"
 crate-type = ["cdylib"]
 
 [dependencies]
-whittaker-eilers-rs = { package = "whittaker-eilers", path = "../whittaker-eilers-rs" }
+whittaker-eilers-rs = { package = "whittaker-eilers", path = "../" }
 
 [dependencies.pyo3]
 version = "0.19.0"
