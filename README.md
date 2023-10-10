@@ -67,7 +67,7 @@ println!("Smoothed data: {:?}", smoothed_data);
 ```
 You can use these methods in combination with each other for instance, interpolating measurements without providing an x input. For more advanced examples of usage take a look at the examples, tests, and benches in the [Github](https://github.com/AnBowell/whittaker-eilers) repository. Here's an image of some smoothed data from an example:
 
-<img src="/examples/images/smoothed_data.png" alt="Time-series smoothed by Whittaker-Eilers method" width="750" />
+<img src="/examples/images/smoothed_data.png" alt="Time-series smoothed by Whittaker-Eilers method" width="800" />
 
 
 ## References
