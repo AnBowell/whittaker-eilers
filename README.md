@@ -72,6 +72,7 @@ You can use these methods in combination with each other for instance, interpola
 ## Future Features
 - Cross validation options to find optimal lambda.
 - Scatter plot smoothing
+- Generic typing
 
 ## References
 The algorithm implemented here mirrors a 2003 implementation by Paul H. C. Eilers in Matlab. I've included scripts and data from the original paper in the tests for this crate. The original paper and code can be found here:
