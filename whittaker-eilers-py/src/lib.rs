@@ -1,5 +1,6 @@
+mod errors;
 mod whittaker_smoother;
-
+use pyo3::{pymodule, types::PyModule, PyResult, Python};
 use whittaker_smoother::WhittakerSmoother;
 
 /// A Python module implemented in Rust. The name of this function must match

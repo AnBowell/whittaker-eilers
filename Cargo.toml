@@ -6,7 +6,7 @@ edition = "2021"
 description = "A sparse matrix implementation of Whittaker-Eilers smoothing and interpolation"
 authors = ["Andrew Bowell <andrewbowell@mail.com>"]
 license = "MIT OR Apache-2.0"
-exclude = ["target/*", "whittaker-eilers-py"]
+exclude = ["target/*", "whittaker-eilers-py/*"]
 keywords = ["smoothing", "interpolation", "filter", "signal-processing"]
 categories = ["algorithms", "mathematics", "science"]
 repository = "https://github.com/AnBowell/whittaker-eilers"
@@ -31,3 +31,6 @@ rand_distr = "0.4.3"
 [[bench]]
 name = "whittaker"
 harness = false
+
+[workspace]
+members = ["whittaker-eilers-py"]
