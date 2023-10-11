@@ -2,19 +2,16 @@ from whittaker_eilers import WhittakerSmoother
 from time import perf_counter_ns
 import numpy as np
 from EOkit.smoothers.whittaker import single_whittaker
-from whittaker_smooth import whittaker_smooth
-from pybaselines.whittaker import asls
+import polars
 
 
 def main():
-    # whittaker_eilers.guess_the_number()
-
     x = [i for i in range(len(WOOD_DATA))]
-
     weights = [i for i in range(len(WOOD_DATA))]
     start = perf_counter_ns()
-    smoother = WhittakerSmoother(2e4, 2, len(WOOD_DATA))
 
+    smoother = WhittakerSmoother(lmbda=2e4, order=2, data_length=len(WOOD_DATA))
+    # smoother.update_weights([12.0])
     smoothed_data = smoother.smooth(WOOD_DATA)
     end = perf_counter_ns()
 
@@ -351,6 +348,6 @@ WOOD_DATA = [
     69.0,
     72.0,
     82.0,
-] * 5
+]
 if __name__ == "__main__":
     main()

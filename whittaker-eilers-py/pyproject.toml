@@ -5,3 +5,20 @@ build-backend = "maturin"
 [tool.maturin]
 # "extension-module" tells pyo3 we want to build an extension module (skips linking against libpython.so)
 features = ["pyo3/extension-module"]
+
+
+[project]
+name = "whittaker-eilers"
+description = "A sparse matrix implementation of Whittaker-Eilers smoothing and interpolation"
+requires-python = ">=3.7"
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Topic :: Scientific/Engineering",
+    "Intended Audience :: Science/Research",
+]
+authors = [{ name = "Andrew Bowell" }]
+readme = "README.md"
+[project.urls]
+repository = "https://github.com/AnBowell/whittaker-eilers/tree/main/whittaker-eilers-py"

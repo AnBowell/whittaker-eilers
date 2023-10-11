@@ -5,21 +5,29 @@ use whittaker_eilers_rs::WhittakerSmoother as WhittakerSmootherRs;
 
 use crate::errors::WhittakerError;
 #[pyclass]
+#[repr(transparent)]
 pub struct WhittakerSmoother(WhittakerSmootherRs);
 
 #[pymethods]
 impl WhittakerSmoother {
     #[new]
+    // #[pyo3(signature = (lmbda, order, data_length, x_input, weights), text_signature = "(lmbda, order, data_length, x_input, weights)")]
     pub fn __init__(
-        lmbd: f64, // Lambda is a key word in python
+        lmbda: f64, // Lambda is a key word in python
         order: usize,
         data_length: usize,
         x_input: Option<Vec<f64>>,
         weights: Option<Vec<f64>>,
     ) -> PyResult<Self> {
         Ok(WhittakerSmoother(
-            WhittakerSmootherRs::new(lmbd, order, data_length, x_input.as_ref(), weights.as_ref())
-                .map_err(map_err_to_py)?,
+            WhittakerSmootherRs::new(
+                lmbda,
+                order,
+                data_length,
+                x_input.as_ref(),
+                weights.as_ref(),
+            )
+            .map_err(map_err_to_py)?,
         ))
     }
 

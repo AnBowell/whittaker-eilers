@@ -2,3 +2,4 @@
 /Cargo.lock
 /whittaker-eilers-py/target
 **__pycache__**
+.vscode
