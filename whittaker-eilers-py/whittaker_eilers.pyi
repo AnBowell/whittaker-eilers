@@ -14,9 +14,9 @@ class WhittakerSmoother:
 
     Parameters
     ----------
-     lambda : Controls the smoothing strength, the larger, the smoother.
-     order : The order of the filter.
-     data_length : The length of the data which is to be smoothed.
+     lambda : Controls the smoothing strength, the larger, the smoother. Must be positive.
+     order : The order of the filter. Must be positive.
+     data_length : The length of the data which is to be smoothed. Must be positive.
      x_input : The time/position at which the y measurement was taken. Used to smooth unequally spaced data. Must be monotonically increasing.
      weights : The weight of each y measurement."""
 

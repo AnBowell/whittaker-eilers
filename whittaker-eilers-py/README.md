@@ -1,5 +1,5 @@
 # Whittaker-Eilers Smoothing and Interpolation
-**The Whittaker-Eilers smoother is the perfect smoother.** It offers extremely quick, efficient smoothing with built-in interpolation via weights on each measurement. This package provides a sparse-matrix implementation for additional speed and memory efficiency and can handle both equally and unequally spaced measurements. This package was originally written in Rust, so additional examples, tests, and benchmarks are also available. The API is almost identical.
+**The Whittaker-Eilers smoother is the perfect smoother.** It offers extremely quick, efficient smoothing with built-in interpolation via weights on each measurement. This package provides a sparse-matrix implementation for additional speed and memory efficiency and can handle both equally and unequally spaced measurements. This package was originally written in Rust so additional examples, tests, and benchmarks are also available in addition to it being super speedy. The API is almost identical.
 
 ---
 
@@ -47,26 +47,54 @@ print("Smoothed non-equally spaced data: {}".format(smoothed_data))
 
 ### Weighted data & Interpolation
 Each measurement can then be weighted to trust some measurements more than others. Setting `weights` to 0 for measurements will lead to interpolation. 
-```rust
-use whittaker_eilers::WhittakerSmoother;
+```python
+from whittaker_eilers import WhittakerSmoother
 
-let x_input = vec![1.1, 1.9, 3.1, 3.91, 5.0, 6.02, 7.01, 7.7, 9.0, 10.0];
-let data_to_smooth = vec![1.1, 1.9, 3.1, 3.91, 5.0, 6.02, 7.01, 7.7, 9.0, 10.0];
-let mut weights = vec![1.0; x_input.len()];
-weights[5] = 0.0;
+x_input = [1.1, 1.9, 3.1, 3.91, 5.0, 6.02, 7.01, 7.7, 9.0, 10.0]
+data_to_smooth = [1.1, 1.9, 3.1, 3.91, 5.0, 6.02, 7.01, 7.7, 9.0, 10.0]
+weights = [1.0] * len(x_input)
+weights[5] = 0.0
 
-let whittaker_smoother =
-            WhittakerSmoother::new(2e4, 2, data_to_smooth.len(), Some(&x_input), Some(&weights))
-            .unwrap();
+whittaker_smoother = WhittakerSmoother(
+    lmbda=2e4,
+    order=2,
+    data_length=len(data_to_smooth),
+    x_input=x_input,
+    weights=weights,
+)
 
-let smoothed_data = whittaker_smoother.smooth(&data_to_smooth).unwrap();
+smoothed_data = whittaker_smoother.smooth(data_to_smooth)
 
-println!("Smoothed data: {:?}", smoothed_data);
+print("Smoothed and interpolated weighted data: {}".format(smoothed_data))
 
 ```
 You can use these methods in combination with each other for instance, interpolating measurements without providing an x input. For more advanced examples of usage take a look at the examples, tests, and benches in the [Github](https://github.com/AnBowell/whittaker-eilers) repository. Here's an image of some smoothed data from an example:
 
 <img src="/examples/images/smoothed_data.png" alt="Time-series smoothed by Whittaker-Eilers method" width="800" />
+
+### Other methods
+```python
+from whittaker_eilers import WhittakerSmoother
+x_input = [1.1, 1.9, 3.1, 3.91, 5.0, 6.02, 7.01, 7.7, 9.0, 10.0]
+data_to_smooth = [1.1, 1.9, 3.1, 3.91, 5.0, 6.02, 7.01, 7.7, 9.0, 10.0]
+weights = [1.0] * len(x_input)
+weights[5] = 0.0
+
+whittaker_smoother = WhittakerSmoother(
+    lmbda=2e4,
+    order=2,
+    data_length=len(data_to_smooth),
+    x_input=x_input,
+    weights=weights,
+)
+
+whittaker_smoother.get_order()
+whittaker_smoother.get_lambda()
+whittaker_smoother.get_data_length()
+whittaker_smoother.update_weights([0.5] * len(x_input))
+whittaker_smoother.update_order(3)
+whittaker_smoother.update_lambda(4321.0)
+```
 
 ## Future Features
 - Cross validation options to find optimal lambda.

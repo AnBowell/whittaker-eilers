@@ -22,3 +22,4 @@ authors = [{ name = "Andrew Bowell" }]
 readme = "README.md"
 [project.urls]
 repository = "https://github.com/AnBowell/whittaker-eilers/tree/main/whittaker-eilers-py"
+documentation = "https://github.com/AnBowell/whittaker-eilers/tree/main/whittaker-eilers-py"
