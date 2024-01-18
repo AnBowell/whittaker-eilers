@@ -1,0 +1,5 @@
+whittaker_eilers==0.1.1
+scipy==1.11.4
+numpy==1.26.3
+statsmodels==0.14.1
+matplotlib==3.8.2
