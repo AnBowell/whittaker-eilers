@@ -69,10 +69,17 @@ You can use these methods in combination with each other for instance, interpola
 
 <img src="/examples/images/smoothed_data.png" alt="Time-series smoothed by Whittaker-Eilers method" width="800" />
 
+
+## Further Reading
+If you'd like to see a more detailed run through of the library, check out this [Medium post](https://medium.com/towards-data-science/the-perfect-way-to-smooth-your-noisy-data-4f3fe6b44440). Within it, I run through examples and benchmarks against other smoothing methods.
+
 ## Future Features
 - Cross validation options to find optimal lambda.
 - Scatter plot smoothing
 - Generic typing
+
+
+
 
 ## References
 The algorithm implemented here mirrors a 2003 implementation by Paul H. C. Eilers in Matlab. I've included scripts and data from the original paper in the tests for this crate. The original paper and code can be found here:

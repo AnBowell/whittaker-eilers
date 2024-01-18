@@ -29,13 +29,13 @@ class WhittakerSmoother:
         weights: Optional[list] = None,
     ) -> None: ...
     def get_order(self) -> int:
-        """Retrieve the smoother's current lambda."""
+        """Retrieve the smoother's current order."""
     ...
     def get_lambda(self) -> float:
         """Retrieve the smoother's current lambda."""
         ...
     def get_data_length(self) -> int:
-        """Retrieve the smoother's current order."""
+        """Retrieve the smoother's current length."""
         ...
     def update_weights(self, weights: list) -> None:
         """Updates the weights of the data to be smoothed.
@@ -62,7 +62,7 @@ class WhittakerSmoother:
 
         Parameters
         ----------
-        lambda : The smoothing constant of the Whittaker-Eilers smoother.
+        lmbda : The smoothing constant of the Whittaker-Eilers smoother.
         """
         ...
     def smooth(self, y_vals: list) -> list:

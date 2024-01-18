@@ -95,6 +95,8 @@ whittaker_smoother.update_weights([0.5] * len(x_input))
 whittaker_smoother.update_order(3)
 whittaker_smoother.update_lambda(4321.0)
 ```
+## Further Reading
+If you'd like to see a more detailed run through of the library, check out this [Medium post](https://medium.com/towards-data-science/the-perfect-way-to-smooth-your-noisy-data-4f3fe6b44440). Within it, I run through examples and benchmarks against other smoothing methods.
 
 ## Future Features
 - Cross validation options to find optimal lambda.

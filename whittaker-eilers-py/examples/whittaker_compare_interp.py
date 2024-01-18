@@ -154,7 +154,7 @@ plt.legend()
 
 if SAVE_PLOT:
     plt.savefig(
-        "public/blog/scripts/outputs/whittaker_compare_interp.png",
+        "whittaker_compare_interp.png",
         dpi=800,
         bbox_inches="tight",
     )

@@ -155,7 +155,7 @@ def main():
 
     if SAVE_PLOT:
         plt.savefig(
-            "public/blog/scripts/outputs/benchmarks.png",
+            "benchmarks.png",
             dpi=800,
             bbox_inches="tight",
         )
