@@ -7,7 +7,7 @@ use crate::errors::WhittakerError;
 
 /// A new Whittaker-Eilers smoother and interpolator.
 ///
-/// The smoother is configured through it's `lambda` and it's `order`. `Lambda` controls the smoothness of the data and `order` controls
+/// The smoother is configured through it's `lambda` and it's `order`. `Lambda` controls the smoothness of the data (1e2~1e4) and `order` controls
 /// the order of which the penalities are applied (generally 2 - 4). The smoother can then be configured to weight measurements between 0 and 1
 /// to interpolate (0 weight) or to complete trust (1 weight) the measurement. The smoother can handle equally spaced measurements by simply not passing
 /// an `x_input` or unequally spaced data by providing the sampling times/positions as `x_input`.
@@ -17,8 +17,8 @@ use crate::errors::WhittakerError;
 ///
 /// Parameters
 /// ----------
-///  lambda : Controls the smoothing strength, the larger, the smoother. Must be positive.
-///  order : The order of the filter. Must be positive.
+///  lmbda : Controls the smoothing strength, the larger, the smoother. Try 1e2~2e4 to start with and adjust based on the result. `lmbda` must be positive.
+///  order : The order of the filter. Try 2~4 to start with. Order must be positive.
 ///  data_length : The length of the data which is to be smoothed. Must be positive.
 ///  x_input : The time/position at which the y measurement was taken. Used to smooth unequally spaced data. Must be monotonically increasing.
 ///  weights : The weight of each y measurement.
