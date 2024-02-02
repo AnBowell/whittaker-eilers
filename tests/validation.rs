@@ -159,6 +159,71 @@ fn validated_x_input_with_weights_whittaker() {
     }
 }
 
+#[test]
+fn validate_cross_validation_no_weights() {
+    let input_data = read_input_to_vecs();
+
+    let mut whittaker_smoother =
+        WhittakerSmoother::new(2e4, 2, input_data.y[..100].len(), None, None).unwrap();
+
+    let cve = whittaker_smoother
+        .smooth_and_cross_validate(&input_data.y[..100])
+        .unwrap();
+
+    assert_relative_eq!(cve, 1.5806, epsilon = 1e-4); // Produced from matlab scripts.
+
+    whittaker_smoother.update_order(3).unwrap();
+
+    let cve = whittaker_smoother
+        .smooth_and_cross_validate(&input_data.y[..100])
+        .unwrap();
+
+    assert_relative_eq!(cve, 1.6178, epsilon = 1e-4);
+
+    println!("Cve: {}", cve)
+}
+#[test]
+fn validate_cross_validation_weights() {
+    let input_data = read_input_to_vecs();
+
+    let mut whittaker_smoother = WhittakerSmoother::new(
+        2e4,
+        2,
+        input_data.y[..100].len(),
+        None,
+        Some(&input_data.weights[..100].to_vec()),
+    )
+    .unwrap();
+
+    let cve = whittaker_smoother
+        .smooth_and_cross_validate(&input_data.y[..100])
+        .unwrap();
+
+    assert_relative_eq!(cve, 1.7282, epsilon = 1e-4);
+
+    println!("Cve: {}", cve)
+}
+#[test]
+fn validate_cross_validation_weights_x_input() {
+    let input_data = read_input_to_vecs();
+
+    let mut whittaker_smoother = WhittakerSmoother::new(
+        2e4,
+        2,
+        input_data.y[..100].len(),
+        Some(&input_data.x[..100].to_vec()),
+        Some(&input_data.weights[..100].to_vec()),
+    )
+    .unwrap();
+
+    let cve = whittaker_smoother
+        .smooth_and_cross_validate(&input_data.y[..100])
+        .unwrap();
+
+    assert_relative_eq!(cve, 1.7426, epsilon = 1e-4);
+
+    println!("Cve: {}", cve)
+}
 struct InputData {
     x: Vec<f64>,
     y: Vec<f64>,

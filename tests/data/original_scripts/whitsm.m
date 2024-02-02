@@ -45,6 +45,7 @@ if nargout > 1
       h = h1(f) * v(k) / h1(k1);
    end
    r = (y - z) ./ (1 - h);
+
    cve = sqrt(r' * r / m);
 end
 

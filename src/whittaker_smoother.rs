@@ -1,10 +1,11 @@
+use crate::errors::WhittakerError;
+use crate::WHITTAKER_X_EPSILON;
+use nalgebra::{DMatrix, DVector};
+// use ndarray_inverse::Inverse;
 use sprs::FillInReduction::ReverseCuthillMcKee;
 use sprs::SymmetryCheck::CheckSymmetry;
 use sprs::{CsMat, CsMatView};
 use sprs_ldl::{Ldl, LdlNumeric};
-
-use crate::errors::WhittakerError;
-use crate::WHITTAKER_X_EPSILON;
 
 /// Whitaker-Eilers Smoother and Interpolator
 ///
@@ -240,6 +241,80 @@ impl WhittakerSmoother {
         } else {
             Ok(self.ldl.solve(y_input))
         };
+    }
+
+    /// TODO! Document func
+    pub fn smooth_and_cross_validate(&self, y_input: &[f64]) -> Result<f64, WhittakerError> {
+        if y_input.len() != self.data_length {
+            return Err(WhittakerError::LengthMismatch(
+                self.data_length,
+                y_input.len(),
+            ));
+        }
+
+        let smoothed_series = self.smooth(y_input)?;
+        let smoothed_dvec = DVector::from_vec(smoothed_series);
+        let y_input_dvec = DVector::from_vec(y_input.to_vec());
+        let identity_dvec = DVector::from_element(self.data_length, 1.0);
+
+        if self.data_length > 100 {
+            let n = 100;
+            let e1: CsMat<f64> = CsMat::eye(n);
+            let d1 = match &self.x_input {
+                Some(x) => todo!(), // ddmat(&e1, x.len(), self.order),
+                None => diff_no_ddmat(&e1, self.order),
+            };
+            let lambda1 =
+                self.lambda * (n as f64 / self.data_length as f64).powf(2.0 * self.order as f64);
+
+            let to_solve = &e1 + &(&(&d1.transpose_view() * &d1) * lambda1);
+
+            let mut hat_matrix = DMatrix::from_iterator(
+                to_solve.rows(),
+                to_solve.cols(),
+                to_solve.to_dense().into_iter(),
+            )
+            .lu()
+            .solve(&DMatrix::identity(n, n))
+            .unwrap();
+
+            let h1 = hat_matrix.diagonal();
+
+            let u = DVector::from_element(self.data_length, 0.0);
+
+            let k = (self.data_length as f64 / 2 as f64).floor();
+
+            let k1 = (n as f64 / 2.0).floor();
+        }
+
+        let mut hat_matrix = DMatrix::from_iterator(
+            self.to_solve.rows(),
+            self.to_solve.cols(),
+            self.to_solve.to_dense().into_iter(),
+        )
+        .lu()
+        .solve(&DMatrix::identity(self.data_length, self.data_length))
+        .unwrap();
+
+        let weights_vec = self
+            .weights_mat
+            .as_ref()
+            .map(|x| DVector::from_row_slice(x.diag().data()));
+
+        if weights_vec.is_some() {
+            hat_matrix *= DMatrix::from_diagonal(weights_vec.as_ref().unwrap());
+        }
+
+        let r =
+            (y_input_dvec - smoothed_dvec).component_div(&(identity_dvec - hat_matrix.diagonal()));
+
+        let cve = match weights_vec.as_ref() {
+            Some(weights) => (r.transpose() * r.component_mul(weights)).sum() / weights.sum(),
+            None => (r.transpose() * r).sum() / self.data_length as f64,
+        }
+        .sqrt();
+
+        return Ok(cve);
     }
 }
 

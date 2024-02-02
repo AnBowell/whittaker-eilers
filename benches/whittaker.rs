@@ -7,6 +7,12 @@ fn new_y_whittaker(y: &Vec<f64>) -> Vec<f64> {
         .smooth(y)
         .unwrap()
 }
+fn new_y_whittaker_cross_validate(y: &Vec<f64>) -> f64 {
+    WhittakerSmoother::new(2e4, 2, y.len(), None, None)
+        .unwrap()
+        .smooth_and_cross_validate(y)
+        .unwrap()
+}
 
 fn new_x_y_whittaker(x: &Vec<f64>, y: &Vec<f64>) -> Vec<f64> {
     WhittakerSmoother::new(2e4, 2, y.len(), Some(x), None)
@@ -37,6 +43,9 @@ fn criterion_benchmark(c: &mut Criterion) {
     .unwrap();
     c.bench_function("Whittaker Wood Y Only", |b| {
         b.iter(|| new_y_whittaker(black_box(&wood_data_vec)))
+    });
+    c.bench_function("Whittaker Wood Cross validate", |b| {
+        b.iter(|| new_y_whittaker_cross_validate(black_box(&wood_data_vec)))
     });
     c.bench_function("Whittaker Wood X and Y", |b| {
         b.iter(|| new_x_y_whittaker(black_box(&wood_x_vec), black_box(&wood_data_vec)))

@@ -18,7 +18,7 @@ readme = "README.md"
 [dependencies]
 sprs = "0.11.1"
 sprs-ldl = "0.10.0"
-
+nalgebra = "0.32.3"
 
 [dev-dependencies]
 plotly = "0.8.4"
