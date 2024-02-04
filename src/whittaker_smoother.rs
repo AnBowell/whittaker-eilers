@@ -1,3 +1,5 @@
+// use std::collections::HashSet;
+
 use crate::errors::WhittakerError;
 use crate::WHITTAKER_X_EPSILON;
 use nalgebra::{DMatrix, DVector};
@@ -243,6 +245,15 @@ impl WhittakerSmoother {
         };
     }
 
+    /// Todo
+    fn smooth_and_cross_validates() -> Result<(Vec<f64>, f64), WhittakerError> {
+        todo!()
+    }
+    // TODO!
+    fn optimise_and_smooth() -> Result<(Vec<f64>, f64), WhittakerError> {
+        todo!()
+    }
+
     /// TODO! Document func
     pub fn smooth_and_cross_validate(&self, y_input: &[f64]) -> Result<f64, WhittakerError> {
         if y_input.len() != self.data_length {
@@ -260,16 +271,45 @@ impl WhittakerSmoother {
         if self.data_length > 100 {
             let n = 100;
             let e1: CsMat<f64> = CsMat::eye(n);
+
+            let g = (0..n)
+                .map(|x| {
+                    ((x as f64) * ((self.data_length - 1) as f64 / (n - 1) as f64)).round() as usize
+                })
+                // .collect::<HashSet<usize>>()
+                // .into_iter()
+                .collect::<Vec<usize>>();
+
             let d1 = match &self.x_input {
-                Some(x) => todo!(), // ddmat(&e1, x.len(), self.order),
+                Some(x) => ddmat(
+                    &g.iter().map(|index| x[*index]).collect::<Vec<f64>>(),
+                    g.len(),
+                    self.order,
+                ),
                 None => diff_no_ddmat(&e1, self.order),
             };
             let lambda1 =
                 self.lambda * (n as f64 / self.data_length as f64).powf(2.0 * self.order as f64);
 
-            let to_solve = &e1 + &(&(&d1.transpose_view() * &d1) * lambda1);
+            let to_solve = match self.weights_mat.as_ref() {
+                Some(x) => {
+                    let weights_vec = g.iter().map(|index| x.data()[*index]).collect::<Vec<f64>>();
 
-            let mut hat_matrix = DMatrix::from_iterator(
+                    let diags = (0..weights_vec.len() + 1).collect::<Vec<usize>>();
+
+                    let weights_mat = CsMat::new_csc(
+                        (weights_vec.len(), weights_vec.len()),
+                        diags[..].to_vec(),
+                        diags[..weights_vec.len()].to_vec(),
+                        weights_vec.clone(),
+                    );
+
+                    &weights_mat + &(&(&d1.transpose_view() * &d1) * lambda1)
+                }
+                None => &e1 + &(&(&d1.transpose_view() * &d1) * lambda1),
+            };
+
+            let hat_matrix = DMatrix::from_iterator(
                 to_solve.rows(),
                 to_solve.cols(),
                 to_solve.to_dense().into_iter(),
@@ -280,41 +320,83 @@ impl WhittakerSmoother {
 
             let h1 = hat_matrix.diagonal();
 
-            let u = DVector::from_element(self.data_length, 0.0);
+            let mut u = DVector::from_element(self.data_length, 0.0);
 
-            let k = (self.data_length as f64 / 2 as f64).floor();
+            let k = (self.data_length as f64 / 2.0).floor() as usize;
 
-            let k1 = (n as f64 / 2.0).floor();
+            let k1 = (n as f64 / 2.0).floor() as usize;
+
+            u[k - 1] = 1.0;
+
+            let v = self.ldl.solve(u.data.as_slice()); // Doesn't need weights
+
+            let f = (0..self.data_length)
+                .map(|x| {
+                    ((x as f64) * ((n - 1) as f64 / (self.data_length - 1) as f64)).round() as usize
+                })
+                // .collect::<HashSet<usize>>()
+                // .into_iter()
+                .collect::<Vec<usize>>();
+
+            let vk = v[k - 1];
+            let h1k1 = h1[k1 - 1];
+
+            println!("len: {}", h1.len());
+
+            let h = match self.weights_mat.as_ref() {
+                Some(x) => f
+                    .iter()
+                    .zip(x.data())
+                    .map(|(index, weight)| weight * h1[*index] * vk / h1k1)
+                    .collect::<Vec<f64>>(),
+                None => f
+                    .iter()
+                    .map(|index| h1[*index] * vk / h1k1)
+                    .collect::<Vec<f64>>(),
+            };
+
+            let h = DVector::from_vec(h);
+
+            let r = (y_input_dvec - smoothed_dvec).component_div(&(identity_dvec - h));
+            let weights_vec = self
+                .weights_mat
+                .as_ref()
+                .map(|x| DVector::from_row_slice(x.diag().data()));
+            let cve = match weights_vec.as_ref() {
+                Some(weights) => (r.transpose() * r.component_mul(weights)).sum() / weights.sum(),
+                None => (r.transpose() * r).sum() / self.data_length as f64,
+            }
+            .sqrt();
+            return Ok(cve);
+        } else {
+            let mut hat_matrix = DMatrix::from_iterator(
+                self.to_solve.rows(),
+                self.to_solve.cols(),
+                self.to_solve.to_dense().into_iter(),
+            )
+            .lu()
+            .solve(&DMatrix::identity(self.data_length, self.data_length))
+            .unwrap();
+
+            let weights_vec = self
+                .weights_mat
+                .as_ref()
+                .map(|x| DVector::from_row_slice(x.diag().data()));
+
+            if weights_vec.is_some() {
+                hat_matrix *= DMatrix::from_diagonal(weights_vec.as_ref().unwrap());
+            }
+            let r = (y_input_dvec - smoothed_dvec)
+                .component_div(&(identity_dvec - hat_matrix.diagonal()));
+
+            let cve = match weights_vec.as_ref() {
+                Some(weights) => (r.transpose() * r.component_mul(weights)).sum() / weights.sum(),
+                None => (r.transpose() * r).sum() / self.data_length as f64,
+            }
+            .sqrt();
+
+            return Ok(cve);
         }
-
-        let mut hat_matrix = DMatrix::from_iterator(
-            self.to_solve.rows(),
-            self.to_solve.cols(),
-            self.to_solve.to_dense().into_iter(),
-        )
-        .lu()
-        .solve(&DMatrix::identity(self.data_length, self.data_length))
-        .unwrap();
-
-        let weights_vec = self
-            .weights_mat
-            .as_ref()
-            .map(|x| DVector::from_row_slice(x.diag().data()));
-
-        if weights_vec.is_some() {
-            hat_matrix *= DMatrix::from_diagonal(weights_vec.as_ref().unwrap());
-        }
-
-        let r =
-            (y_input_dvec - smoothed_dvec).component_div(&(identity_dvec - hat_matrix.diagonal()));
-
-        let cve = match weights_vec.as_ref() {
-            Some(weights) => (r.transpose() * r.component_mul(weights)).sum() / weights.sum(),
-            None => (r.transpose() * r).sum() / self.data_length as f64,
-        }
-        .sqrt();
-
-        return Ok(cve);
     }
 }
 
