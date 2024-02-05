@@ -7,7 +7,7 @@ fn new_y_whittaker(y: &Vec<f64>) -> Vec<f64> {
         .smooth(y)
         .unwrap()
 }
-fn new_y_whittaker_cross_validate(y: &Vec<f64>) -> f64 {
+fn new_y_whittaker_cross_validate(y: &Vec<f64>) -> (Vec<f64>, f64) {
     WhittakerSmoother::new(2e4, 2, y.len(), None, None)
         .unwrap()
         .smooth_and_cross_validate(y)

@@ -116,6 +116,27 @@ fn smooth_and_interpolate(
     plot.show();
 }
 
+fn smooth_cross_validate(x_input: &Vec<f64>, y_input: &Vec<f64>, order: usize) {
+    let optimal_smooth_with_error = WhittakerSmoother::new(100.0, order, y_input.len(), None, None)
+        .unwrap()
+        .optimise_and_smooth(y_input, false)
+        .unwrap();
+
+    let raw_points = Scatter::new(x_input.clone(), y_input.to_vec())
+        .mode(Mode::Markers)
+        .name("Raw Wood Data");
+    let smoothed_points = Scatter::new(x_input.clone(), optimal_smooth_with_error.0)
+        .mode(Mode::Lines)
+        .name("Whittaker Optimally Smoothed");
+
+    let mut plot = Plot::new();
+    plot.add_trace(raw_points);
+    plot.add_trace(smoothed_points);
+
+    let layout = Layout::new().title("Whittaker optimal cross validation".into());
+    plot.set_layout(layout);
+    plot.show();
+}
 fn main() {
     let mut y_input = WOOD_DATASET.to_vec();
     let x_input = (0..y_input.len()).map(|x| x as f64).collect::<Vec<f64>>();
@@ -143,6 +164,8 @@ fn main() {
 
     smooth_with_weights(&x_input_with_noise, &y_input, &weights, lambda, order);
 
+    smooth_cross_validate(&x_input, &y_input, order);
+
     for i in 30..60 {
         y_input[i] = 0.0; // Set y to some arbitrary value we want to interpolate.
         weights[i] = 0.0; // Set weights to 0 for data we want to interpolate.
@@ -151,8 +174,8 @@ fn main() {
     smooth_and_interpolate(&x_input, &y_input, &weights, lambda, order);
 }
 
-/// Data from this repo:
-/// <https://github.com/mhvwerts/whittaker-eilers-smoother>
+/// Data from this repo, though originally from Eiler's paper.
+/// <https://github.com/mhvwerts/whittaker-eilers-smoother>.
 pub const WOOD_DATASET: &[f64] = &[
     106.0, 111.0, 111.0, 107.0, 105.0, 107.0, 110.0, 108.0, 111.0, 119.0, 117.0, 107.0, 105.0,
     107.0, 109.0, 105.0, 104.0, 102.0, 108.0, 113.0, 113.0, 107.0, 103.0, 103.0, 98.0, 102.0,

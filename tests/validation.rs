@@ -5,7 +5,7 @@ use std::{
 };
 use whittaker_eilers::WhittakerSmoother;
 
-const INPUT_DATA_LOC: &'static str = "tests/data/input/nmr_with_weights_and_x.csv";
+// TODO: Tests need a refactor to extract common code.
 
 #[test]
 fn validate_standard_whittaker() {
@@ -160,7 +160,7 @@ fn validated_x_input_with_weights_whittaker() {
 }
 
 #[test]
-fn validate_cross_validation_no_weights_100() {
+fn cross_validation_no_weights_100() {
     let input_data = read_input_to_vecs();
 
     let mut whittaker_smoother =
@@ -170,7 +170,7 @@ fn validate_cross_validation_no_weights_100() {
         .smooth_and_cross_validate(&input_data.y[..100])
         .unwrap();
 
-    assert_relative_eq!(cve, 1.5806, epsilon = 1e-4); // Produced from matlab scripts.
+    assert_relative_eq!(cve.1, 1.5806, epsilon = 1e-4); // Produced from matlab scripts.
 
     whittaker_smoother.update_order(3).unwrap();
 
@@ -178,12 +178,10 @@ fn validate_cross_validation_no_weights_100() {
         .smooth_and_cross_validate(&input_data.y[..100])
         .unwrap();
 
-    assert_relative_eq!(cve, 1.6178, epsilon = 1e-4);
-
-    println!("Cve: {}", cve)
+    assert_relative_eq!(cve.1, 1.6178, epsilon = 1e-4);
 }
 #[test]
-fn validate_cross_validation_no_weights() {
+fn cross_validation_no_weights() {
     let input_data = read_input_to_vecs();
 
     let mut whittaker_smoother =
@@ -193,7 +191,7 @@ fn validate_cross_validation_no_weights() {
         .smooth_and_cross_validate(&input_data.y)
         .unwrap();
 
-    assert_relative_eq!(cve, 3.3568, epsilon = 1e-4); // Produced from matlab scripts.
+    assert_relative_eq!(cve.1, 3.3568, epsilon = 1e-4); // Produced from matlab scripts.
 
     whittaker_smoother.update_order(3).unwrap();
 
@@ -201,15 +199,13 @@ fn validate_cross_validation_no_weights() {
         .smooth_and_cross_validate(&input_data.y)
         .unwrap();
 
-    assert_relative_eq!(cve, 2.6859, epsilon = 1e-4);
-
-    println!("Cve: {}", cve)
+    assert_relative_eq!(cve.1, 2.6859, epsilon = 1e-4);
 }
 #[test]
-fn validate_cross_validation_weights_100() {
+fn cross_validation_weights_100() {
     let input_data = read_input_to_vecs();
 
-    let mut whittaker_smoother = WhittakerSmoother::new(
+    let whittaker_smoother = WhittakerSmoother::new(
         2e4,
         2,
         input_data.y[..100].len(),
@@ -222,15 +218,13 @@ fn validate_cross_validation_weights_100() {
         .smooth_and_cross_validate(&input_data.y[..100])
         .unwrap();
 
-    assert_relative_eq!(cve, 1.7282, epsilon = 1e-4);
-
-    println!("Cve: {}", cve)
+    assert_relative_eq!(cve.1, 1.7282, epsilon = 1e-4);
 }
 #[test]
-fn validate_cross_validation_weights() {
+fn cross_validation_weights() {
     let input_data = read_input_to_vecs();
 
-    let mut whittaker_smoother = WhittakerSmoother::new(
+    let whittaker_smoother = WhittakerSmoother::new(
         2e4,
         2,
         input_data.y.len(),
@@ -243,15 +237,13 @@ fn validate_cross_validation_weights() {
         .smooth_and_cross_validate(&input_data.y)
         .unwrap();
 
-    assert_relative_eq!(cve, 3.4549, epsilon = 1e-4);
-
-    println!("Cve: {}", cve)
+    assert_relative_eq!(cve.1, 3.4549, epsilon = 1e-4);
 }
 #[test]
-fn validate_cross_validation_weights_x_input_100() {
+fn cross_validation_weights_x_input_100() {
     let input_data = read_input_to_vecs();
 
-    let mut whittaker_smoother = WhittakerSmoother::new(
+    let whittaker_smoother = WhittakerSmoother::new(
         2e4,
         2,
         input_data.y[..100].len(),
@@ -264,15 +256,13 @@ fn validate_cross_validation_weights_x_input_100() {
         .smooth_and_cross_validate(&input_data.y[..100])
         .unwrap();
 
-    assert_relative_eq!(cve, 1.7426, epsilon = 1e-4);
-
-    println!("Cve: {}", cve)
+    assert_relative_eq!(cve.1, 1.7426, epsilon = 1e-4);
 }
 #[test]
-fn validate_cross_validation_weights_x_input() {
+fn cross_validation_weights_x_input() {
     let input_data = read_input_to_vecs();
 
-    let mut whittaker_smoother = WhittakerSmoother::new(
+    let whittaker_smoother = WhittakerSmoother::new(
         2e4,
         2,
         input_data.y.len(),
@@ -285,15 +275,13 @@ fn validate_cross_validation_weights_x_input() {
         .smooth_and_cross_validate(&input_data.y)
         .unwrap();
 
-    assert_relative_eq!(cve, 3.0762, epsilon = 1e-4);
-
-    println!("Cve: {}", cve)
+    assert_relative_eq!(cve.1, 3.0762, epsilon = 1e-4);
 }
 #[test]
-fn validate_cross_validation_x_input_100() {
+fn cross_validation_x_input_100() {
     let input_data = read_input_to_vecs();
 
-    let mut whittaker_smoother = WhittakerSmoother::new(
+    let whittaker_smoother = WhittakerSmoother::new(
         2e4,
         2,
         input_data.y[..100].len(),
@@ -306,15 +294,13 @@ fn validate_cross_validation_x_input_100() {
         .smooth_and_cross_validate(&input_data.y[..100])
         .unwrap();
 
-    assert_relative_eq!(cve, 1.5872, epsilon = 1e-4);
-
-    println!("Cve: {}", cve)
+    assert_relative_eq!(cve.1, 1.5872, epsilon = 1e-4);
 }
 #[test]
-fn validate_cross_validation_x_input() {
+fn cross_validation_x_input() {
     let input_data = read_input_to_vecs();
 
-    let mut whittaker_smoother = WhittakerSmoother::new(
+    let whittaker_smoother = WhittakerSmoother::new(
         2e4,
         2,
         input_data.y.len(),
@@ -327,18 +313,29 @@ fn validate_cross_validation_x_input() {
         .smooth_and_cross_validate(&input_data.y)
         .unwrap();
 
-    assert_relative_eq!(cve, 3.0413, epsilon = 1e-4);
-
-    println!("Cve: {}", cve)
-}
-struct InputData {
-    x: Vec<f64>,
-    y: Vec<f64>,
-    weights: Vec<f64>,
-    random_weights: Vec<f64>,
+    assert_relative_eq!(cve.1, 3.0413, epsilon = 1e-4);
 }
 
-fn read_input_to_vecs() -> InputData {
+#[test]
+fn smooth_and_optimise() {
+    let input_data = read_input_to_vecs();
+
+    let mut whittaker_smoother =
+        WhittakerSmoother::new(2e4, 2, input_data.y.len(), None, None).unwrap();
+
+    let cve = whittaker_smoother.optimise_and_smooth(&input_data.y, false);
+}
+
+const INPUT_DATA_LOC: &'static str = "tests/data/input/nmr_with_weights_and_x.csv";
+
+pub struct InputData {
+    pub x: Vec<f64>,
+    pub y: Vec<f64>,
+    pub weights: Vec<f64>,
+    pub random_weights: Vec<f64>,
+}
+
+pub fn read_input_to_vecs() -> InputData {
     let file = File::open(INPUT_DATA_LOC).unwrap();
     let reader = BufReader::new(file);
 
@@ -366,7 +363,7 @@ fn read_input_to_vecs() -> InputData {
     };
 }
 
-fn read_output_to_vec(file_name: &str) -> Vec<f64> {
+pub fn read_output_to_vec(file_name: &str) -> Vec<f64> {
     let file = File::open(file_name).unwrap();
     let reader = BufReader::new(file);
 

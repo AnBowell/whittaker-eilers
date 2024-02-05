@@ -27,7 +27,7 @@ z = C \ (C' \ y);
 if nargout > 1
    if m <= 100    % Exact hat diagonal
       H = inv(E + lambda * D' * D);
-      h = diag(h);
+      h = diag(H);
    else           % Map to diag(H) for n = 100
       n = 100;
       E1 = speye(n);
