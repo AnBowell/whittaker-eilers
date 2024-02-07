@@ -1,5 +1,6 @@
+use crate::cross_validation::every_tenth_element;
 use crate::errors::WhittakerError;
-use crate::WHITTAKER_X_EPSILON;
+use crate::{CrossValidationResult, OptimisedSmoothResult, WHITTAKER_X_EPSILON};
 use nalgebra::{DMatrix, DVector};
 
 use sprs::FillInReduction::ReverseCuthillMcKee;
@@ -232,6 +233,7 @@ impl WhittakerSmoother {
                 self.weights_mat
                     .as_ref()
                     .unwrap()
+                    .diag()
                     .data()
                     .iter()
                     .zip(y_input)
@@ -244,57 +246,10 @@ impl WhittakerSmoother {
     }
 
     /// TODO: Document
-    pub fn optimise_and_smooth(
-        &mut self,
-        y_input: &[f64],
-        break_serial_correlation: bool,
-    ) -> Result<(Vec<f64>, f64), WhittakerError> {
-        let mut start_lambda_log = (1e-2_f64).log10(); // -2
-        let end_lambda_log = (1e8_f64).log10(); // 8
-
-        let mut smoothed_data = Vec::<f64>::new();
-        let mut optimal_lambda = f64::MAX;
-        let mut cve = f64::MAX;
-
-        if break_serial_correlation {
-            // TODO! Make this work when we already have weights.
-            let cross_validation_weights: Vec<f64> = (0..self.data_length)
-                .map(|x| if x % 10 == 0 { 1.0 } else { 0.0 })
-                .collect::<Vec<f64>>();
-
-            println!("Weights: {:?}", cross_validation_weights);
-            self.update_weights(&cross_validation_weights)?;
-        }
-
-        while start_lambda_log != end_lambda_log {
-            let new_lambda = 10_f64.powf(start_lambda_log);
-
-            self.update_lambda(new_lambda)?;
-            let res = self.smooth_and_cross_validate(y_input)?;
-
-            if res.1 < cve {
-                cve = res.1;
-                smoothed_data = res.0;
-                optimal_lambda = new_lambda;
-            }
-            println!("Lambda: {}, Error: {}", new_lambda, res.1);
-            start_lambda_log += 0.5;
-        }
-
-        if break_serial_correlation {
-            self.update_lambda(optimal_lambda)?;
-            self.update_weights(&vec![1.0; self.data_length])?;
-            smoothed_data = self.smooth(y_input)?;
-        }
-
-        return Ok((smoothed_data, cve));
-    }
-
-    /// TODO: Document
     pub fn smooth_and_cross_validate(
         &self,
         y_input: &[f64],
-    ) -> Result<(Vec<f64>, f64), WhittakerError> {
+    ) -> Result<CrossValidationResult, WhittakerError> {
         if y_input.len() != self.data_length {
             return Err(WhittakerError::LengthMismatch(
                 self.data_length,
@@ -330,9 +285,12 @@ impl WhittakerSmoother {
             let lambda1 =
                 self.lambda * (n as f64 / self.data_length as f64).powf(2.0 * self.order as f64);
 
-            let to_solve = match self.weights_mat.as_ref() {
+            let to_inverse = match self.weights_mat.as_ref() {
                 Some(x) => {
-                    let weights_vec = g.iter().map(|index| x.data()[*index]).collect::<Vec<f64>>();
+                    let weights_vec = g
+                        .iter()
+                        .map(|index| x.diag().data()[*index])
+                        .collect::<Vec<f64>>();
 
                     let diags = (0..weights_vec.len() + 1).collect::<Vec<usize>>();
 
@@ -343,15 +301,17 @@ impl WhittakerSmoother {
                         weights_vec.clone(),
                     );
 
+                    // println!("EWeights mat: {:#?}", weights_mat);
+
                     &weights_mat + &(&(&d1.transpose_view() * &d1) * lambda1)
                 }
                 None => &e1 + &(&(&d1.transpose_view() * &d1) * lambda1),
             };
 
             let hat_matrix = DMatrix::from_iterator(
-                to_solve.rows(),
-                to_solve.cols(),
-                to_solve.to_dense().into_iter(),
+                to_inverse.rows(),
+                to_inverse.cols(),
+                to_inverse.to_dense().into_iter(),
             )
             .lu()
             .solve(&DMatrix::identity(n, n))
@@ -383,7 +343,7 @@ impl WhittakerSmoother {
             let h = match self.weights_mat.as_ref() {
                 Some(x) => f
                     .iter()
-                    .zip(x.data())
+                    .zip(x.diag().data())
                     .map(|(index, weight)| weight * h1[*index] * vk / h1k1)
                     .collect::<Vec<f64>>(),
                 None => f
@@ -404,7 +364,12 @@ impl WhittakerSmoother {
                 None => (r.transpose() * r).sum() / self.data_length as f64,
             }
             .sqrt();
-            return Ok((smoothed_series, cve));
+
+            return Ok(CrossValidationResult {
+                lambda: self.get_lambda(),
+                smoothed: smoothed_series,
+                cross_validation_error: cve,
+            });
         } else {
             let mut hat_matrix = DMatrix::from_iterator(
                 self.to_solve.rows(),
@@ -432,8 +397,88 @@ impl WhittakerSmoother {
             }
             .sqrt();
 
-            return Ok((smoothed_series, cve));
+            return Ok(CrossValidationResult {
+                lambda: self.get_lambda(),
+                smoothed: smoothed_series,
+                cross_validation_error: cve,
+            });
         }
+    }
+
+    /// TODO
+    pub fn smooth_and_optimise(
+        &mut self,
+        y_input: &[f64],
+        break_serial_correlation: bool,
+    ) -> Result<OptimisedSmoothResult, WhittakerError> {
+        let step = 0.2;
+        let mut start_lambda_log = (1e-2_f64).log10(); // -2
+        let end_lambda_log = (1e8_f64).log10(); // 8
+
+        let mut optimal_index = 0;
+        let mut validation_results = Vec::new();
+        let mut min_cve = f64::MAX;
+
+        let mut possible_new_config = if break_serial_correlation {
+            let every_n_y_input = every_tenth_element(y_input);
+
+            let new_length = every_n_y_input.len();
+
+            let every_n_x_input = self.x_input.as_ref().map(|x| every_tenth_element(&x));
+
+            let every_n_weight = self
+                .weights_mat
+                .as_ref()
+                .map(|x| every_tenth_element(x.diag().data()));
+
+            let new_smoother = WhittakerSmoother::new(
+                1.0,
+                self.order,
+                new_length,
+                every_n_x_input.as_ref(),
+                every_n_weight.as_ref(),
+            )?;
+            Some((new_smoother, every_n_y_input))
+        } else {
+            None
+        };
+
+        let mut loop_counter = 0;
+        while (start_lambda_log - end_lambda_log - step).abs() > 1e-6 {
+            let new_lambda = 10_f64.powf(start_lambda_log);
+
+            let res = match possible_new_config.as_mut() {
+                Some((new_smoother, y)) => {
+                    new_smoother.update_lambda(new_lambda)?;
+                    new_smoother.smooth_and_cross_validate(y)?
+                }
+                None => {
+                    self.update_lambda(new_lambda)?;
+                    self.smooth_and_cross_validate(y_input)?
+                }
+            };
+
+            if res.cross_validation_error < min_cve {
+                optimal_index = loop_counter;
+                min_cve = res.cross_validation_error
+            }
+            validation_results.push(res);
+
+            start_lambda_log += step;
+            loop_counter += 1;
+        }
+
+        if break_serial_correlation {
+            for res in validation_results.iter_mut() {
+                self.update_lambda(res.lambda)?;
+                res.smoothed = self.smooth(y_input)?;
+            }
+        }
+
+        return Ok(OptimisedSmoothResult {
+            validation_results,
+            optimal_index,
+        });
     }
 }
 

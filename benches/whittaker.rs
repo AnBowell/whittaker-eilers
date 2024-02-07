@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use whittaker_eilers::WhittakerSmoother;
+use whittaker_eilers::{CrossValidationResult, WhittakerSmoother};
 
 fn new_y_whittaker(y: &Vec<f64>) -> Vec<f64> {
     WhittakerSmoother::new(2e4, 2, y.len(), None, None)
@@ -7,7 +7,7 @@ fn new_y_whittaker(y: &Vec<f64>) -> Vec<f64> {
         .smooth(y)
         .unwrap()
 }
-fn new_y_whittaker_cross_validate(y: &Vec<f64>) -> (Vec<f64>, f64) {
+fn new_y_whittaker_cross_validate(y: &Vec<f64>) -> CrossValidationResult {
     WhittakerSmoother::new(2e4, 2, y.len(), None, None)
         .unwrap()
         .smooth_and_cross_validate(y)

@@ -170,7 +170,7 @@ fn cross_validation_no_weights_100() {
         .smooth_and_cross_validate(&input_data.y[..100])
         .unwrap();
 
-    assert_relative_eq!(cve.1, 1.5806, epsilon = 1e-4); // Produced from matlab scripts.
+    assert_relative_eq!(cve.cross_validation_error, 1.5806, epsilon = 1e-4); // Produced from matlab scripts.
 
     whittaker_smoother.update_order(3).unwrap();
 
@@ -178,7 +178,7 @@ fn cross_validation_no_weights_100() {
         .smooth_and_cross_validate(&input_data.y[..100])
         .unwrap();
 
-    assert_relative_eq!(cve.1, 1.6178, epsilon = 1e-4);
+    assert_relative_eq!(cve.cross_validation_error, 1.6178, epsilon = 1e-4);
 }
 #[test]
 fn cross_validation_no_weights() {
@@ -191,7 +191,7 @@ fn cross_validation_no_weights() {
         .smooth_and_cross_validate(&input_data.y)
         .unwrap();
 
-    assert_relative_eq!(cve.1, 3.3568, epsilon = 1e-4); // Produced from matlab scripts.
+    assert_relative_eq!(cve.cross_validation_error, 3.3568, epsilon = 1e-4); // Produced from matlab scripts.
 
     whittaker_smoother.update_order(3).unwrap();
 
@@ -199,7 +199,7 @@ fn cross_validation_no_weights() {
         .smooth_and_cross_validate(&input_data.y)
         .unwrap();
 
-    assert_relative_eq!(cve.1, 2.6859, epsilon = 1e-4);
+    assert_relative_eq!(cve.cross_validation_error, 2.6859, epsilon = 1e-4);
 }
 #[test]
 fn cross_validation_weights_100() {
@@ -218,7 +218,7 @@ fn cross_validation_weights_100() {
         .smooth_and_cross_validate(&input_data.y[..100])
         .unwrap();
 
-    assert_relative_eq!(cve.1, 1.7282, epsilon = 1e-4);
+    assert_relative_eq!(cve.cross_validation_error, 1.7282, epsilon = 1e-4);
 }
 #[test]
 fn cross_validation_weights() {
@@ -237,7 +237,7 @@ fn cross_validation_weights() {
         .smooth_and_cross_validate(&input_data.y)
         .unwrap();
 
-    assert_relative_eq!(cve.1, 3.4549, epsilon = 1e-4);
+    assert_relative_eq!(cve.cross_validation_error, 3.4549, epsilon = 1e-4);
 }
 #[test]
 fn cross_validation_weights_x_input_100() {
@@ -256,7 +256,7 @@ fn cross_validation_weights_x_input_100() {
         .smooth_and_cross_validate(&input_data.y[..100])
         .unwrap();
 
-    assert_relative_eq!(cve.1, 1.7426, epsilon = 1e-4);
+    assert_relative_eq!(cve.cross_validation_error, 1.7426, epsilon = 1e-4);
 }
 #[test]
 fn cross_validation_weights_x_input() {
@@ -275,7 +275,7 @@ fn cross_validation_weights_x_input() {
         .smooth_and_cross_validate(&input_data.y)
         .unwrap();
 
-    assert_relative_eq!(cve.1, 3.0762, epsilon = 1e-4);
+    assert_relative_eq!(cve.cross_validation_error, 3.0762, epsilon = 1e-4);
 }
 #[test]
 fn cross_validation_x_input_100() {
@@ -294,7 +294,7 @@ fn cross_validation_x_input_100() {
         .smooth_and_cross_validate(&input_data.y[..100])
         .unwrap();
 
-    assert_relative_eq!(cve.1, 1.5872, epsilon = 1e-4);
+    assert_relative_eq!(cve.cross_validation_error, 1.5872, epsilon = 1e-4);
 }
 #[test]
 fn cross_validation_x_input() {
@@ -313,17 +313,36 @@ fn cross_validation_x_input() {
         .smooth_and_cross_validate(&input_data.y)
         .unwrap();
 
-    assert_relative_eq!(cve.1, 3.0413, epsilon = 1e-4);
+    assert_relative_eq!(cve.cross_validation_error, 3.0413, epsilon = 1e-4);
 }
 
 #[test]
 fn smooth_and_optimise() {
     let input_data = read_input_to_vecs();
 
-    let mut whittaker_smoother =
-        WhittakerSmoother::new(2e4, 2, input_data.y.len(), None, None).unwrap();
+    let mut whittaker_smoother = WhittakerSmoother::new(
+        2e4,
+        2,
+        input_data.y[..1000].len(),
+        None,
+        Some(&vec![1.0; input_data.y[..1000].len()]),
+    )
+    .unwrap();
 
-    let cve = whittaker_smoother.optimise_and_smooth(&input_data.y, false);
+    let cve = whittaker_smoother
+        .smooth_and_optimise(&input_data.y[..1000], false)
+        .unwrap();
+
+    let expected = vec![
+        2.1757, 2.1454, 2.0975, 2.0590, 2.0582, 2.0985, 2.1701, 2.2592, 2.3701, 2.5221, 2.7156,
+        2.9600, 3.2329, 3.4642, 3.6345, 3.7721, 3.9201, 4.1200, 4.4106, 4.8411, 5.5055,
+    ];
+
+    for (actual, expected) in cve.validation_results.iter().zip(expected) {
+        assert_relative_eq!(actual.cross_validation_error, expected, epsilon = 1e-4);
+    }
+
+    // println!("Cve: {:?}", cve);
 }
 
 const INPUT_DATA_LOC: &'static str = "tests/data/input/nmr_with_weights_and_x.csv";

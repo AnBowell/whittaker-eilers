@@ -103,6 +103,7 @@ fn smooth_and_interpolate(
     let raw_points = Scatter::new(x_input.clone(), y_input.to_vec())
         .mode(Mode::Markers)
         .name("Raw Wood Data");
+
     let smoothed_points = Scatter::new(x_input.clone(), smoothed_y_only)
         .mode(Mode::Lines)
         .name("Whittaker Smoothed With Weights");
@@ -117,23 +118,50 @@ fn smooth_and_interpolate(
 }
 
 fn smooth_cross_validate(x_input: &Vec<f64>, y_input: &Vec<f64>, order: usize) {
-    let optimal_smooth_with_error = WhittakerSmoother::new(100.0, order, y_input.len(), None, None)
-        .unwrap()
-        .optimise_and_smooth(y_input, false)
-        .unwrap();
+    let optimal_smooth_with_error =
+        WhittakerSmoother::new(100.0, order, y_input.len(), Some(x_input), None)
+            .unwrap()
+            .smooth_and_optimise(&y_input, true)
+            .unwrap();
 
     let raw_points = Scatter::new(x_input.clone(), y_input.to_vec())
         .mode(Mode::Markers)
         .name("Raw Wood Data");
-    let smoothed_points = Scatter::new(x_input.clone(), optimal_smooth_with_error.0)
-        .mode(Mode::Lines)
-        .name("Whittaker Optimally Smoothed");
+    let smoothed_points = Scatter::new(
+        x_input.clone(),
+        optimal_smooth_with_error.get_optimal().smoothed,
+    )
+    .mode(Mode::Lines)
+    .name("Whittaker Optimally Smoothed");
 
     let mut plot = Plot::new();
     plot.add_trace(raw_points);
     plot.add_trace(smoothed_points);
 
     let layout = Layout::new().title("Whittaker optimal cross validation".into());
+    plot.set_layout(layout);
+    plot.show();
+
+    let smoothed_points = Scatter::new(
+        optimal_smooth_with_error
+            .validation_results
+            .iter()
+            .map(|x| x.lambda.log10())
+            .collect(),
+        optimal_smooth_with_error
+            .validation_results
+            .iter()
+            .map(|x| x.cross_validation_error)
+            .collect(),
+    )
+    .mode(Mode::Lines)
+    .name("Cross validation error");
+
+    let mut plot = Plot::new();
+
+    plot.add_trace(smoothed_points);
+
+    let layout = Layout::new().title("Cross Validation Error".into());
     plot.set_layout(layout);
     plot.show();
 }
@@ -174,8 +202,6 @@ fn main() {
     smooth_and_interpolate(&x_input, &y_input, &weights, lambda, order);
 }
 
-/// Data from this repo, though originally from Eiler's paper.
-/// <https://github.com/mhvwerts/whittaker-eilers-smoother>.
 pub const WOOD_DATASET: &[f64] = &[
     106.0, 111.0, 111.0, 107.0, 105.0, 107.0, 110.0, 108.0, 111.0, 119.0, 117.0, 107.0, 105.0,
     107.0, 109.0, 105.0, 104.0, 102.0, 108.0, 113.0, 113.0, 107.0, 103.0, 103.0, 98.0, 102.0,
