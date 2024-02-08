@@ -1,4 +1,4 @@
-use crate::cross_validation::every_tenth_element;
+use crate::cross_validation::every_fifth_element;
 use crate::errors::WhittakerError;
 use crate::{CrossValidationResult, OptimisedSmoothResult, WHITTAKER_X_EPSILON};
 use nalgebra::{DMatrix, DVector};
@@ -217,7 +217,7 @@ impl WhittakerSmoother {
     /// will result in a lot of overhead.
     ///
     /// # Arguments
-    /// * `vals_y`: The values which are to be smoothed and interpolated by the Whittaker-Eilers smoother.
+    /// * `y_input`: The values which are to be smoothed and interpolated by the Whittaker-Eilers smoother.
     ///
     /// # Returns:
     /// The smoothed and interpolated data.
@@ -245,7 +245,17 @@ impl WhittakerSmoother {
         };
     }
 
-    /// TODO: Document
+    /// Run Whittaker-Eilers smoothing, interpolation and cross validation.
+    ///
+    /// This function will run the smoother and assess the cross validation error on the result. This is defined in Eiler's
+    /// 2003 paper: "A Perfect Smoother".  It involves computing the "hat matrix" or "smoother matrix" which inverses a sparse matrix. The
+    /// inverse of a sparse matrix is usually dense, so this function will take much longer to run in comparison to just running `smooth`.
+    ///
+    /// # Arguments
+    /// * `y_input`: The values which are to be smoothed and interpolated and have their cross validation error calculated.
+    ///
+    /// # Returns
+    /// whittaker_eilers::cross_validation::CrossValidationResult: The smoothed data, lambda it was smoothed at, and the cross validation error.
     pub fn smooth_and_cross_validate(
         &self,
         y_input: &[f64],
@@ -301,8 +311,6 @@ impl WhittakerSmoother {
                         weights_vec.clone(),
                     );
 
-                    // println!("EWeights mat: {:#?}", weights_mat);
-
                     &weights_mat + &(&(&d1.transpose_view() * &d1) * lambda1)
                 }
                 None => &e1 + &(&(&d1.transpose_view() * &d1) * lambda1),
@@ -315,7 +323,7 @@ impl WhittakerSmoother {
             )
             .lu()
             .solve(&DMatrix::identity(n, n))
-            .unwrap();
+            .ok_or_else(|| WhittakerError::MatrixNotInvertible)?;
 
             let h1 = hat_matrix.diagonal();
 
@@ -333,8 +341,6 @@ impl WhittakerSmoother {
                 .map(|x| {
                     ((x as f64) * ((n - 1) as f64 / (self.data_length - 1) as f64)).round() as usize
                 })
-                // .collect::<HashSet<usize>>()
-                // .into_iter()
                 .collect::<Vec<usize>>();
 
             let vk = v[k - 1];
@@ -378,7 +384,7 @@ impl WhittakerSmoother {
             )
             .lu()
             .solve(&DMatrix::identity(self.data_length, self.data_length))
-            .unwrap();
+            .ok_or_else(|| WhittakerError::MatrixNotInvertible)?;
 
             let weights_vec = self
                 .weights_mat
@@ -411,7 +417,7 @@ impl WhittakerSmoother {
         y_input: &[f64],
         break_serial_correlation: bool,
     ) -> Result<OptimisedSmoothResult, WhittakerError> {
-        let step = 0.2;
+        let step = 0.5;
         let mut start_lambda_log = (1e-2_f64).log10(); // -2
         let end_lambda_log = (1e8_f64).log10(); // 8
 
@@ -420,16 +426,16 @@ impl WhittakerSmoother {
         let mut min_cve = f64::MAX;
 
         let mut possible_new_config = if break_serial_correlation {
-            let every_n_y_input = every_tenth_element(y_input);
+            let every_n_y_input = every_fifth_element(y_input);
 
             let new_length = every_n_y_input.len();
 
-            let every_n_x_input = self.x_input.as_ref().map(|x| every_tenth_element(&x));
+            let every_n_x_input = self.x_input.as_ref().map(|x| every_fifth_element(&x));
 
             let every_n_weight = self
                 .weights_mat
                 .as_ref()
-                .map(|x| every_tenth_element(x.diag().data()));
+                .map(|x| every_fifth_element(x.diag().data()));
 
             let new_smoother = WhittakerSmoother::new(
                 1.0,

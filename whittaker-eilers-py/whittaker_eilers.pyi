@@ -1,4 +1,13 @@
-from typing import Optional, Iterable
+from typing import Optional
+
+class CrossValidationResult:
+    def get_lambda(self) -> float: ...
+    def get_smoothed(self) -> list[float]: ...
+    def get_cross_validation_error(self) -> float: ...
+    ...
+
+class OptimisedSmoothResult:
+    def get_optimal(self) -> CrossValidationResult: ...
 
 # Bit of a pain having to handcraft these! Especially with the docs.
 class WhittakerSmoother:
@@ -65,7 +74,7 @@ class WhittakerSmoother:
         lmbda : The smoothing constant of the Whittaker-Eilers smoother.
         """
         ...
-    def smooth(self, y_vals: list) -> list:
+    def smooth(self, y_vals: list[float]) -> list:
         """Run Whittaker-Eilers smoothing and interpolation.
 
         This function actually runs the solver which results in the smoothed data. If you just wish to continuously smooth
@@ -80,3 +89,9 @@ class WhittakerSmoother:
         -------
         The smoothed and interpolated data."""
         ...
+    def smooth_and_cross_validate(
+        self, y_input: list[float]
+    ) -> CrossValidationResult: ...
+    def smooth_and_optimise(
+        self, y_input: list[float], break_serial_correlation: bool = True
+    ) -> OptimisedSmoothResult: ...

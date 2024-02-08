@@ -20,6 +20,8 @@ pub enum WhittakerError {
     SampleRateError(usize),
     /// Occurs when the x input is not increasing Monotonically. It should be always increasing; never remaining constant or decreasing. Contains the offending data index.
     NotMonotonicallyIncreasing(usize),
+    /// Occurs when trying to invert a matrix that cannot be inverted. This can only occur when computing cross validation error.
+    MatrixNotInvertible
 }
 
 impl std::fmt::Display for WhittakerError {
@@ -50,6 +52,9 @@ impl std::fmt::Display for WhittakerError {
             WhittakerError::NotMonotonicallyIncreasing(position) => write!(
                 f,
                 "vals_x input data needs to be monotonically increasing. Offending index: {}", position
+            ),
+            WhittakerError::MatrixNotInvertible => write!(
+                f, "When computing cross validation, a matrix inversion is computed. Your current data is unable to be inverted."
             )
         }
     }

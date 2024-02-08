@@ -117,9 +117,9 @@ fn smooth_and_interpolate(
     plot.show();
 }
 
-fn smooth_cross_validate(x_input: &Vec<f64>, y_input: &Vec<f64>, order: usize) {
+fn smooth_cross_validate(x_input: &Vec<f64>, y_input: &Vec<f64>, weights: &Vec<f64>, order: usize) {
     let optimal_smooth_with_error =
-        WhittakerSmoother::new(100.0, order, y_input.len(), Some(x_input), None)
+        WhittakerSmoother::new(100.0, order, y_input.len(), Some(x_input), Some(weights))
             .unwrap()
             .smooth_and_optimise(&y_input, true)
             .unwrap();
@@ -192,7 +192,7 @@ fn main() {
 
     smooth_with_weights(&x_input_with_noise, &y_input, &weights, lambda, order);
 
-    smooth_cross_validate(&x_input, &y_input, order);
+    smooth_cross_validate(&x_input, &y_input, &weights, order);
 
     for i in 30..60 {
         y_input[i] = 0.0; // Set y to some arbitrary value we want to interpolate.

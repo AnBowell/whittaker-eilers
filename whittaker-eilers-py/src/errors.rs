@@ -16,6 +16,9 @@ impl std::convert::From<WhittakerError> for PyErr {
             WhittakerErrorRs::NotMonotonicallyIncreasing(_) => {
                 NotMonotonicallyIncreasing::new_err(err.0.to_string())
             }
+            WhittakerErrorRs::MatrixNotInvertible => {
+                MatrixNotInvertible::new_err(err.0.to_string())
+            }
         }
     }
 }
@@ -25,3 +28,4 @@ create_exception!(whittaker_eilers, DataTooShort, PyException);
 create_exception!(whittaker_eilers, SolverError, PyException);
 create_exception!(whittaker_eilers, SampleRateError, PyException);
 create_exception!(whittaker_eilers, NotMonotonicallyIncreasing, PyException);
+create_exception!(whittaker_eilers, MatrixNotInvertible, PyException);

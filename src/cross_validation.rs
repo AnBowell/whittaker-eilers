@@ -22,10 +22,10 @@ pub struct CrossValidationResult {
     pub cross_validation_error: f64,
 }
 
-pub(crate) fn every_tenth_element(data: &[f64]) -> Vec<f64> {
+pub(crate) fn every_fifth_element(data: &[f64]) -> Vec<f64> {
     data.iter()
         .enumerate()
-        .filter(|(index, _)| index % 10 == 0)
+        .filter(|(index, _)| index % 5 == 0)
         .map(|(_, val)| *val)
         .collect::<Vec<f64>>()
 }

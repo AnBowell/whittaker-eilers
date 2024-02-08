@@ -3,6 +3,7 @@ use pyo3::prelude::*;
 use whittaker_eilers_rs::WhittakerError as WhittakerErrorRs;
 use whittaker_eilers_rs::WhittakerSmoother as WhittakerSmootherRs;
 
+use crate::cross_validation::{CrossValidationResult, OptimisedSmoothResult};
 use crate::errors::WhittakerError;
 
 /// A new Whittaker-Eilers smoother and interpolator.
@@ -108,6 +109,28 @@ impl WhittakerSmoother {
     /// The smoothed and interpolated data.
     pub fn smooth(&self, y_vals: Vec<f64>) -> PyResult<Vec<f64>> {
         self.0.smooth(&y_vals).map_err(map_err_to_py)
+    }
+
+    /// TODO: Doc string
+    pub fn smooth_and_cross_validate(&self, y_input: Vec<f64>) -> PyResult<CrossValidationResult> {
+        Ok(CrossValidationResult(
+            self.0
+                .smooth_and_cross_validate(&y_input)
+                .map_err(map_err_to_py)?,
+        ))
+    }
+    /// TODO: Doc string
+    #[pyo3(signature = (y_input, break_serial_correlation = true))]
+    pub fn smooth_and_optimise(
+        &mut self,
+        y_input: Vec<f64>,
+        break_serial_correlation: bool,
+    ) -> PyResult<OptimisedSmoothResult> {
+        Ok(OptimisedSmoothResult(
+            self.0
+                .smooth_and_optimise(&y_input, break_serial_correlation)
+                .map_err(map_err_to_py)?,
+        ))
     }
 }
 

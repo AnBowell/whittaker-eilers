@@ -11,7 +11,12 @@ DOI: 10.1021/ac034173t
 
 
 I've modified some of the scripts which begin with "demo", to output a csv which can be
-used to test and validate the rust version of the Whittaker smoother. I've included the original ReadMe below.
+used to test and validate the rust version of the Whittaker smoother. I was able to recreate most things from the paper and
+supporting materials about from the cross validation error graph in Figure 10.
+
+
+I've included the original README below.
+
 
 
 ---
