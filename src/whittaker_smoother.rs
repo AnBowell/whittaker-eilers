@@ -254,8 +254,8 @@ impl WhittakerSmoother {
     /// # Arguments
     /// * `y_input`: The values which are to be smoothed and interpolated and have their cross validation error calculated.
     ///
-    /// # Returns
-    /// whittaker_eilers::cross_validation::CrossValidationResult: The smoothed data, lambda it was smoothed at, and the cross validation error.
+    /// # Returns:
+    /// [CrossValidationResult]: The smoothed data, lambda it was smoothed at, and the cross validation error.
     pub fn smooth_and_cross_validate(
         &self,
         y_input: &[f64],
@@ -411,7 +411,23 @@ impl WhittakerSmoother {
         }
     }
 
-    /// TODO
+    /// Runs Whittaker-Eilers smoothing for a variety of lambdas and selects the optimally smoothed time series.
+    ///
+    /// This function runs the smoother for lambdas varying from 1e-2 to 1e8 in logarithmic steps of 0.5. It computes the
+    /// hat/smoother matrix and finds the optimal lambda for the data. If the time-series exhibits serial correlation the optimal
+    /// lambda can be very small and mean the smoothed data doesn't differ from the input data. To avoid this, use `break_serial_correlation = true`
+    ///
+    /// It will return the smoothed data, lambda, and cross validation error for each lambda tested!
+    ///
+    /// As the smoother matrix requires the inversion of a sparse matrix (which usually becomes a dense matrix), this code is extremely slow compared to smoothing
+    /// with a known lambda. Use sparingly!
+    ///
+    /// # Arguments
+    /// * `y_input`: The values which are to be smoothed, interpolated, and cross validated for a variety of lambdas.
+    /// * `break_serial_correlation`: Default here should be `true`. Without it, data that exhibits serial correlation is barely smoothed.
+    ///
+    /// # Returns:
+    /// [OptimisedSmoothResult]: The smoothed data, lambda, and error for each tested lambda.
     pub fn smooth_and_optimise(
         &mut self,
         y_input: &[f64],

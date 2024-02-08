@@ -1,24 +1,29 @@
-/// TODO
+/// Contains the results of cross validation for a variety of lambdas
+///
+/// This struct contains the results of finding the optimal lambda. A vec
+/// contains all of the lambdas, smoothed series, and errors. A function then
+/// provides the ability to return the optimal one.
+///
 pub struct OptimisedSmoothResult {
-    /// TODO
+    /// The lambda, smoothed series, and errors for each lambda tested.
     pub validation_results: Vec<CrossValidationResult>,
     pub(crate) optimal_index: usize,
 }
 
 impl OptimisedSmoothResult {
-    /// TODO
+    /// Returns the optimally smoothed data series, lambda, and error.
     pub fn get_optimal(&self) -> CrossValidationResult {
         return self.validation_results[self.optimal_index].to_owned();
     }
 }
-/// TODO
+/// The result of smoothing with cross validation
 #[derive(Clone, Debug)]
 pub struct CrossValidationResult {
-    /// TODO
+    /// The lambda value that was used to smooth the data.
     pub lambda: f64,
-    /// TODO
+    /// The smoothed data.
     pub smoothed: Vec<f64>,
-    /// TODO
+    /// The associated cross validation error for the smoothed data.
     pub cross_validation_error: f64,
 }
 
