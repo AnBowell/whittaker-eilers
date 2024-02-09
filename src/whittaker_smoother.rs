@@ -371,11 +371,11 @@ impl WhittakerSmoother {
             }
             .sqrt();
 
-            return Ok(CrossValidationResult {
+            Ok(CrossValidationResult {
                 lambda: self.get_lambda(),
                 smoothed: smoothed_series,
                 cross_validation_error: cve,
-            });
+            })
         } else {
             let mut hat_matrix = DMatrix::from_iterator(
                 self.to_solve.rows(),
@@ -403,11 +403,11 @@ impl WhittakerSmoother {
             }
             .sqrt();
 
-            return Ok(CrossValidationResult {
+            Ok(CrossValidationResult {
                 lambda: self.get_lambda(),
                 smoothed: smoothed_series,
                 cross_validation_error: cve,
-            });
+            })
         }
     }
 
@@ -424,11 +424,11 @@ impl WhittakerSmoother {
     ///
     /// # Arguments
     /// * `y_input`: The values which are to be smoothed, interpolated, and cross validated for a variety of lambdas.
-    /// * `break_serial_correlation`: Default here should be `true`. Without it, data that exhibits serial correlation is barely smoothed.
+    /// * `break_serial_correlation`: Default here should be `true`. Without it data that exhibits serial correlation is barely smoothed.
     ///
     /// # Returns:
-    /// [OptimisedSmoothResult]: The smoothed data, lambda, and error for each tested lambda.
-    pub fn smooth_and_optimise(
+    /// [OptimisedSmoothResult]: The smoothed data, lambda, and error for each tested lambda. Calling get_optimal, returns the best smoothed series.
+    pub fn smooth_optimal(
         &mut self,
         y_input: &[f64],
         break_serial_correlation: bool,
@@ -497,10 +497,10 @@ impl WhittakerSmoother {
             }
         }
 
-        return Ok(OptimisedSmoothResult {
+        Ok(OptimisedSmoothResult {
             validation_results,
             optimal_index,
-        });
+        })
     }
 }
 

@@ -1,13 +1,14 @@
-from typing import Optional
+from typing import Optional, List
 
 class CrossValidationResult:
     def get_lambda(self) -> float: ...
-    def get_smoothed(self) -> list[float]: ...
+    def get_smoothed(self) -> List[float]: ...
     def get_cross_validation_error(self) -> float: ...
     ...
 
 class OptimisedSmoothResult:
     def get_optimal(self) -> CrossValidationResult: ...
+    def get_all(self) -> List[CrossValidationResult]: ...
 
 # Bit of a pain having to handcraft these! Especially with the docs.
 class WhittakerSmoother:
@@ -34,8 +35,8 @@ class WhittakerSmoother:
         lmbda: float,
         order: int,
         data_length: int,
-        x_input: Optional[list] = None,
-        weights: Optional[list] = None,
+        x_input: Optional[List] = None,
+        weights: Optional[List] = None,
     ) -> None: ...
     def get_order(self) -> int:
         """Retrieve the smoother's current order."""
@@ -46,7 +47,7 @@ class WhittakerSmoother:
     def get_data_length(self) -> int:
         """Retrieve the smoother's current length."""
         ...
-    def update_weights(self, weights: list) -> None:
+    def update_weights(self, weights: List) -> None:
         """Updates the weights of the data to be smoothed.
         The length of weights should be equal to that of the data you are to smooth. The values of the weights should fall between 0 and 1.
 
@@ -74,7 +75,7 @@ class WhittakerSmoother:
         lmbda : The smoothing constant of the Whittaker-Eilers smoother.
         """
         ...
-    def smooth(self, y_vals: list[float]) -> list:
+    def smooth(self, y_vals: List[float]) -> List:
         """Run Whittaker-Eilers smoothing and interpolation.
 
         This function actually runs the solver which results in the smoothed data. If you just wish to continuously smooth
@@ -89,9 +90,46 @@ class WhittakerSmoother:
         -------
         The smoothed and interpolated data."""
         ...
-    def smooth_and_cross_validate(
-        self, y_input: list[float]
-    ) -> CrossValidationResult: ...
-    def smooth_and_optimise(
-        self, y_input: list[float], break_serial_correlation: bool = True
-    ) -> OptimisedSmoothResult: ...
+
+    def smooth_and_cross_validate(self, y_vals: List[float]) -> CrossValidationResult:
+        """Run Whittaker-Eilers smoothing, interpolation and cross validation.
+
+        This function will run the smoother and assess the cross validation error on the result. This is defined in Eiler's
+        2003 paper: "A Perfect Smoother".  It involves computing the "hat matrix" or "smoother matrix" which inverses a sparse matrix. The
+        inverse of a sparse matrix is usually dense, so this function will take much longer to run in comparison to just running `smooth`.
+
+        Parameters
+        ----------
+        y_vals: The values which are to be smoothed and interpolated and have their cross validation error calculated.
+
+        Returns
+        -------
+        CrossValidationResult: The smoothed data, lambda it was smoothed at, and the cross validation error.
+
+        """
+    ...
+
+    def smooth_optimal(
+        self, y_vals: List[float], break_serial_correlation: bool = True
+    ) -> OptimisedSmoothResult:
+        """Runs Whittaker-Eilers smoothing for a variety of lambdas and selects the optimally smoothed time series.
+
+        This function runs the smoother for lambdas varying from 1e-2 to 1e8 in logarithmic steps of 0.5. It computes the
+        hat/smoother matrix and finds the optimal lambda for the data. If the time-series exhibits serial correlation the optimal
+        lambda can be very small and mean the smoothed data doesn't differ from the input data. To avoid this, use `break_serial_correlation = true`
+
+        It will return the smoothed data, lambda, and cross validation error for each lambda tested!
+
+        As the smoother matrix requires the inversion of a sparse matrix (which usually becomes a dense matrix), this code is extremely slow compared to smoothing
+        with a known lambda. Use sparingly!
+
+        Parameters
+        ----------
+        y_input: The values which are to be smoothed, interpolated, and cross validated for a variety of lambdas.
+        break_serial_correlation: Defaults to `true`. Without it, data that exhibits serial correlation is barely smoothed.
+
+        Returns
+        -------
+        OptimisedSmoothResult: The smoothed data, lambda, and error for each tested lambda. Calling get_optimal, returns the best smoothed series.
+        """
+    ...

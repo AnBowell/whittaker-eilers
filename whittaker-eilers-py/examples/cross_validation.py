@@ -9,13 +9,30 @@ years = data[:, 0]
 temp_anom = data[:, 1]
 other_smoothed = data[:, 2]
 
-whittaker_smoother = WhittakerSmoother(lmbda=20, order=2, data_length=len(temp_anom))
+weights = [1.0] * len(years)
 
+for i in range(1, len(temp_anom)):
+    if (i % 2 == 0) and i != len(temp_anom) - 1:
+        temp_anom[i] = np.nan
+        weights[i] = 0.0
 
-res = whittaker_smoother.smooth_and_cross_validate(list(temp_anom))
+    if i > 5 and i < 5 + 15:
+        temp_anom[i] = np.nan
+        weights[i] = 0.0
 
+    if i > 96 and i < 96 + 30:
+        temp_anom[i] = np.nan
+        weights[i] = 0.0
 
-res = whittaker_smoother.smooth_and_optimise(list(temp_anom))
+whittaker_smoother = WhittakerSmoother(
+    lmbda=20, order=2, data_length=len(temp_anom), x_input=list(years), weights=weights
+)
+
+smoothed_data = whittaker_smoother.smooth_and_cross_validate(list(np.nan_to_num(temp_anom)))
+
+print(smoothed_data.get_cross_validation_error())
+
+res = whittaker_smoother.smooth_optimal(list(np.nan_to_num(temp_anom)))
 
 print(res.get_optimal().get_lambda())
 

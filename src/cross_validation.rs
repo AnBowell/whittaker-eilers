@@ -4,6 +4,7 @@
 /// contains all of the lambdas, smoothed series, and errors. A function then
 /// provides the ability to return the optimal one.
 ///
+#[derive(Clone, Debug)]
 pub struct OptimisedSmoothResult {
     /// The lambda, smoothed series, and errors for each lambda tested.
     pub validation_results: Vec<CrossValidationResult>,
@@ -13,7 +14,7 @@ pub struct OptimisedSmoothResult {
 impl OptimisedSmoothResult {
     /// Returns the optimally smoothed data series, lambda, and error.
     pub fn get_optimal(&self) -> CrossValidationResult {
-        return self.validation_results[self.optimal_index].to_owned();
+        self.validation_results[self.optimal_index].to_owned()
     }
 }
 /// The result of smoothing with cross validation

@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use whittaker_eilers::{CrossValidationResult, WhittakerSmoother};
+use whittaker_eilers::{CrossValidationResult, OptimisedSmoothResult, WhittakerSmoother};
 
 fn new_y_whittaker(y: &Vec<f64>) -> Vec<f64> {
     WhittakerSmoother::new(2e4, 2, y.len(), None, None)
@@ -13,7 +13,12 @@ fn new_y_whittaker_cross_validate(y: &Vec<f64>) -> CrossValidationResult {
         .smooth_and_cross_validate(y)
         .unwrap()
 }
-
+fn new_y_whittaker_optimal(y: &Vec<f64>) -> OptimisedSmoothResult {
+    WhittakerSmoother::new(2e4, 2, y.len(), None, None)
+        .unwrap()
+        .smooth_optimal(y, true)
+        .unwrap()
+}
 fn new_x_y_whittaker(x: &Vec<f64>, y: &Vec<f64>) -> Vec<f64> {
     WhittakerSmoother::new(2e4, 2, y.len(), Some(x), None)
         .unwrap()
@@ -47,6 +52,9 @@ fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("Whittaker Wood Cross validate", |b| {
         b.iter(|| new_y_whittaker_cross_validate(black_box(&wood_data_vec)))
     });
+    c.bench_function("Whittaker Wood Cross validate Optimal", |b| {
+        b.iter(|| new_y_whittaker_optimal(black_box(&wood_data_vec)))
+    });
     c.bench_function("Whittaker Wood X and Y", |b| {
         b.iter(|| new_x_y_whittaker(black_box(&wood_x_vec), black_box(&wood_data_vec)))
     });
@@ -66,8 +74,6 @@ fn criterion_benchmark(c: &mut Criterion) {
 criterion_group!(benches, criterion_benchmark);
 criterion_main!(benches);
 
-/// Data from this repo:
-/// <https://github.com/mhvwerts/whittaker-eilers-smoother>
 pub const WOOD_DATASET: &[f64] = &[
     106.0, 111.0, 111.0, 107.0, 105.0, 107.0, 110.0, 108.0, 111.0, 119.0, 117.0, 107.0, 105.0,
     107.0, 109.0, 105.0, 104.0, 102.0, 108.0, 113.0, 113.0, 107.0, 103.0, 103.0, 98.0, 102.0,

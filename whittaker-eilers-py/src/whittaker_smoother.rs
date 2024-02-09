@@ -111,24 +111,55 @@ impl WhittakerSmoother {
         self.0.smooth(&y_vals).map_err(map_err_to_py)
     }
 
-    /// TODO: Doc string
-    pub fn smooth_and_cross_validate(&self, y_input: Vec<f64>) -> PyResult<CrossValidationResult> {
+    /// Run Whittaker-Eilers smoothing, interpolation and cross validation.
+    ///
+    /// This function will run the smoother and assess the cross validation error on the result. This is defined in Eiler's
+    /// 2003 paper: "A Perfect Smoother".  It involves computing the "hat matrix" or "smoother matrix" which inverses a sparse matrix. The
+    /// inverse of a sparse matrix is usually dense, so this function will take much longer to run in comparison to just running `smooth`.
+    ///
+    /// Parameters
+    /// ----------
+    /// y_vals: The values which are to be smoothed and interpolated and have their cross validation error calculated.
+    ///
+    /// Returns
+    /// -------
+    ///
+    /// CrossValidationResult: The smoothed data, lambda it was smoothed at, and the cross validation error.
+    pub fn smooth_and_cross_validate(&self, y_vals: Vec<f64>) -> PyResult<CrossValidationResult> {
         Ok(CrossValidationResult(
             self.0
-                .smooth_and_cross_validate(&y_input)
+                .smooth_and_cross_validate(&y_vals)
                 .map_err(map_err_to_py)?,
         ))
     }
-    /// TODO: Doc string
-    #[pyo3(signature = (y_input, break_serial_correlation = true))]
-    pub fn smooth_and_optimise(
+    /// Runs Whittaker-Eilers smoothing for a variety of lambdas and selects the optimally smoothed time series.
+    ///
+    /// This function runs the smoother for lambdas varying from 1e-2 to 1e8 in logarithmic steps of 0.5. It computes the
+    /// hat/smoother matrix and finds the optimal lambda for the data. If the time-series exhibits serial correlation the optimal
+    /// lambda can be very small and mean the smoothed data doesn't differ from the input data. To avoid this, use `break_serial_correlation = true`
+    ///
+    /// It will return the smoothed data, lambda, and cross validation error for each lambda tested!
+    ///
+    /// As the smoother matrix requires the inversion of a sparse matrix (which usually becomes a dense matrix), this code is extremely slow compared to smoothing
+    /// with a known lambda. Use sparingly!
+    ///
+    /// Parameters
+    /// ----------
+    /// y_input: The values which are to be smoothed, interpolated, and cross validated for a variety of lambdas.
+    /// break_serial_correlation: Defaults to `true`. Without it, data that exhibits serial correlation is barely smoothed.
+    ///
+    /// Returns
+    /// -------
+    /// OptimisedSmoothResult: The smoothed data, lambda, and error for each tested lambda. Calling get_optimal, returns the best smoothed series.
+    #[pyo3(signature = (y_vals, break_serial_correlation = true))]
+    pub fn smooth_optimal(
         &mut self,
-        y_input: Vec<f64>,
+        y_vals: Vec<f64>,
         break_serial_correlation: bool,
     ) -> PyResult<OptimisedSmoothResult> {
         Ok(OptimisedSmoothResult(
             self.0
-                .smooth_and_optimise(&y_input, break_serial_correlation)
+                .smooth_optimal(&y_vals, break_serial_correlation)
                 .map_err(map_err_to_py)?,
         ))
     }

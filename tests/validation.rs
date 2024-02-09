@@ -330,7 +330,7 @@ fn smooth_and_optimise() {
     .unwrap();
 
     let cve = whittaker_smoother
-        .smooth_and_optimise(&input_data.y[..1000], false)
+        .smooth_optimal(&input_data.y[..1000], false)
         .unwrap();
 
     let expected = vec![
@@ -341,8 +341,6 @@ fn smooth_and_optimise() {
     for (actual, expected) in cve.validation_results.iter().zip(expected) {
         assert_relative_eq!(actual.cross_validation_error, expected, epsilon = 1e-4);
     }
-
-    // println!("Cve: {:?}", cve);
 }
 
 const INPUT_DATA_LOC: &'static str = "tests/data/input/nmr_with_weights_and_x.csv";

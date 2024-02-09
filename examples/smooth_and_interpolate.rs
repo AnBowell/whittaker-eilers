@@ -121,7 +121,7 @@ fn smooth_cross_validate(x_input: &Vec<f64>, y_input: &Vec<f64>, weights: &Vec<f
     let optimal_smooth_with_error =
         WhittakerSmoother::new(100.0, order, y_input.len(), Some(x_input), Some(weights))
             .unwrap()
-            .smooth_and_optimise(&y_input, true)
+            .smooth_optimal(&y_input, true)
             .unwrap();
 
     let raw_points = Scatter::new(x_input.clone(), y_input.to_vec())
@@ -175,7 +175,7 @@ fn main() {
     let weights_distribution = Uniform::new(0.0, 1.0);
 
     let x_input_with_noise = (0..y_input.len())
-        .map(|x| (x as f64) + x_noise_distribution.sample(&mut rng)) //TODO! Check this is sampling each time
+        .map(|x| (x as f64) + x_noise_distribution.sample(&mut rng))
         .collect::<Vec<f64>>();
 
     let mut weights = weights_distribution
