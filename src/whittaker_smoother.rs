@@ -434,8 +434,8 @@ impl WhittakerSmoother {
         break_serial_correlation: bool,
     ) -> Result<OptimisedSmoothResult, WhittakerError> {
         let step = 0.5;
-        let mut start_lambda_log = (1e-2_f64).log10(); // -2
-        let end_lambda_log = (1e8_f64).log10(); // 8
+        let mut start_lambda_log = (1e-5_f64).log10();
+        let end_lambda_log = (1e8_f64).log10();
 
         let mut optimal_index = 0;
         let mut validation_results = Vec::new();

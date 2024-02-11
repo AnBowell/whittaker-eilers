@@ -3,3 +3,9 @@
 /whittaker-eilers-py/target
 **__pycache__**
 .vscode
+
+
+
+whittaker-eilers-py/examples/cross_validation_article/AirQualityUCI.csv
+whittaker-eilers-py/examples/cross_validation_article/bone.data
+whittaker-eilers-py/examples/cross_validation_article/spec-1939-53389-0138.fits
