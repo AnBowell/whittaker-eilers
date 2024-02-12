@@ -1,6 +1,8 @@
 import numpy as np
 from whittaker_eilers import WhittakerSmoother
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
+from matplotlib.ticker import FormatStrFormatter
 
 axis_color = "#d0d0fa"
 face_color = "#00002a"
@@ -62,41 +64,40 @@ def main():
         cve_ax = next(cve_axes_iter)
         [spine.set_color(axis_color) for (_, spine) in cve_ax.spines.items()]
 
-        cve_ax.plot(
+        cve_plot = cve_ax.plot(
             lambdas,
             cross_validation_errors,
-            color="#fc8d28",
-            label="Cross validation",
+            color="#59f176",
+            label="CVE",
             marker=".",
             markersize=8,
         )
         ax2 = cve_ax.twinx()
-        ax2.plot(
+        rmse_plot = ax2.plot(
             lambdas,
             actual_errors,
-            color="#66b0ff",
+            color="red",
             label="RMSE",
             marker=".",
             markersize=8,
         )
+        [spine.set_color(axis_color) for (_, spine) in ax2.spines.items()]
 
-        ax2.tick_params(
-            axis="y", direction="in", color=axis_color, labelcolor=axis_color
-        )
-        ax2.tick_params(
-            axis="x", direction="in", color=axis_color, labelcolor=axis_color
-        )
-
+        ax2.tick_params(axis="y", direction="in", color="red", labelcolor=axis_color)
+        ax2.tick_params(axis="x", direction="in", color="red", labelcolor=axis_color)
+        ax2.yaxis.set_major_formatter(FormatStrFormatter("%.2f"))
         cve_ax.set_xscale("log")
+        cve_ax.yaxis.set_major_locator(MaxNLocator(nbins=4, integer=False))
         # cve_ax.set_yscale("log")
-
+        cve_ax.yaxis.set_major_formatter(FormatStrFormatter("%.2f"))
         cve_ax.tick_params(
-            axis="y", direction="in", color=axis_color, labelcolor=axis_color
+            axis="y", direction="in", color="#59f176", labelcolor=axis_color
         )
         cve_ax.tick_params(
-            axis="x", direction="in", color=axis_color, labelcolor=axis_color
+            axis="x", direction="in", color="#59f176", labelcolor=axis_color
         )
-        cve_ax.grid(True, ls="--", alpha=0.6)
+        cve_ax.grid(True, ls="--", alpha=0.3, color="#59f176")
+        ax2.grid(True, ls="--", alpha=0.3, color="red")
         cve_ax.set_facecolor("#00002a")
 
         smoothed_ax = next(smoothed_axes_iter)
@@ -114,7 +115,6 @@ def main():
         smoothed_ax.set_facecolor("#00002a")
         # ax1.set_xlim(0, 2 * np.pi)
 
-        smoothed_ax.plot(x, original_y, label="Original", color="white")
         smoothed_ax.plot(
             x,
             y_with_noise,
@@ -124,7 +124,7 @@ def main():
             alpha=0.6,
             markersize=8,
         )
-
+        smoothed_ax.plot(x, original_y, label="Original", color="#f003ef")
         smoothed_ax.plot(
             x,
             optimal_smooth.get_optimal().get_smoothed(),
@@ -137,17 +137,54 @@ def main():
         match counter:
             case 0:
                 smoothed_ax.set_ylim(-1.25, 1.25)
+                smoothed_ax.legend(fontsize=14)
+                lns = cve_plot + rmse_plot
+                labs = [l.get_label() for l in lns]
+                cve_ax.legend(lns, labs, fontsize=14)
+                cve_ax.set_ylabel("CVE", fontsize=14, color=axis_color)
             case 1:
                 smoothed_ax.set_ylim(-1.25, 1.25)
+                # smoothed_ax.yaxis.set_label_position("right")
+                # smoothed_ax.yaxis.tick_right()
+                smoothed_ax.yaxis.set_tick_params(labelleft=False)
+
+                ax2.set_ylabel("RMSE", fontsize=14, color=axis_color)
+
             case 2:
-                smoothed_ax.set_ylim(-3.25, 3.25)
+                smoothed_ax.set_ylim(-10.0, 10.0)
+                cve_ax.set_ylabel("CVE", fontsize=14, color=axis_color)
+
             case 3:
                 smoothed_ax.set_ylim(-10, 10)
+                smoothed_ax.yaxis.set_tick_params(labelleft=False)
+                ax2.set_ylabel("RMSE", fontsize=14, color=axis_color)
+                # smoothed_ax.yaxis.set_label_position("right")
+                # smoothed_ax.yaxis.tick_right()
             case _:
                 pass
         smoothed_fig.supxlabel("x / Radians", color=axis_color, fontsize=18)
         y_label = smoothed_fig.supylabel("Amplitude", color=axis_color, fontsize=18)
         y_label.set_x(0.07)
+
+        cve_fig.supxlabel("λ", color=axis_color, fontsize=18)
+        # y_label_cve = cve_fig.supylabel("CVE", color=axis_color, fontsize=18)
+        # y_label_cve.set_x(0.09)
+
+        # y_label_cve = cve_fig.supylabel("RMSE", color=axis_color, fontsize=18)
+        # y_label_cve.set_x(0.96)
+    # smoothed_fig.tight_layout()
+    # cve_fig.tight_layout()
+    # smooth_ax.xaxis.set_major_locator(mdates.DayLocator())
+    smoothed_fig.savefig(
+        "cross_validation_article/smoothed_rmse_compare.png",
+        dpi=600,
+        bbox_inches="tight",
+    )
+    cve_fig.savefig(
+        "cross_validation_article/cve_vs_rmse.png",
+        dpi=800,
+        bbox_inches="tight",
+    )
     plt.show()
 
 

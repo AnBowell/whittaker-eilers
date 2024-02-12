@@ -3,6 +3,7 @@
 /whittaker-eilers-py/target
 **__pycache__**
 .vscode
+*.venv
 
 
 
