@@ -1,8 +1,10 @@
 import numpy as np
 from whittaker_eilers import WhittakerSmoother
+
 import matplotlib.pyplot as plt
 import pandas as pd
 from astropy.io import fits
+
 
 axis_color = "#d0d0fa"
 face_color = "#00002a"
@@ -74,8 +76,10 @@ def plot_bone_mineral_density():
             female_lambdas[np.argmin(female_cross_validation_errors)]
         )
     )
-    (fig, ax1) = plt.subplots(figsize=(8, 4), facecolor="#00002a")
-    ax1.plot(
+
+    (fig, smooth_ax, cve_ax) = create_figure_and_axes()
+
+    cve_ax.plot(
         male_lambdas,
         male_cross_validation_errors,
         color="#59f176",
@@ -83,7 +87,7 @@ def plot_bone_mineral_density():
         marker=".",
         markersize=8,
     )
-    ax1.plot(
+    cve_ax.plot(
         female_lambdas,
         female_cross_validation_errors,
         color="red",
@@ -92,53 +96,30 @@ def plot_bone_mineral_density():
         markersize=8,
     )
 
-    ax1.set_xscale("log")
-    # ax1.set_yscale("log")
-    ax1.spines["bottom"].set_color(axis_color)
-    ax1.spines["top"].set_color(axis_color)
-    ax1.spines["right"].set_color(axis_color)
-    ax1.spines["left"].set_color(axis_color)
+    cve_ax.set_xlabel("λ", color=axis_color, fontsize=16)
+    cve_ax.set_ylabel("CVE", color=axis_color, fontsize=14)
+    cve_ax.set_xscale("log")
 
-    ax1.tick_params(axis="y", direction="in", color=axis_color, labelcolor=axis_color)
-    ax1.tick_params(axis="x", direction="in", color=axis_color, labelcolor=axis_color)
-    ax1.grid(True, ls="--", alpha=0.6)
-    # ax1.set_xlim(1e1, 1e5)
-    ax1.set_facecolor("#00002a")
-    plt.show(block=False)
-
-    (fig, ax1) = plt.subplots(figsize=(8, 4), facecolor="#00002a")
-
-    ax1.spines["bottom"].set_color(axis_color)
-    ax1.spines["top"].set_color(axis_color)
-    ax1.spines["right"].set_color(axis_color)
-    ax1.spines["left"].set_color(axis_color)
-    ax1.set_xlabel("Ages / Years", color=axis_color)
-    ax1.set_ylabel("Relative Change in Spinal Bone Mineral Density", color=axis_color)
-    ax1.tick_params(axis="y", direction="in", color=axis_color, labelcolor=axis_color)
-    ax1.tick_params(axis="x", direction="in", color=axis_color, labelcolor=axis_color)
-    ax1.grid(True, ls="--", alpha=0.6)
-    ax1.set_facecolor("#00002a")
-    # ax1.set_xlim(0, 50)
-    #
-    ax1.scatter(
+    smooth_ax.set_xlabel("Age / year", color=axis_color, fontsize=14)
+    smooth_ax.set_ylabel("Δ Spinal Bone Mineral Density", color=axis_color, fontsize=14)
+    smooth_ax.set_xlim(10, 25)
+    smooth_ax.scatter(
         x_input_male,
         y_raw_male,
         color="#59f176",
-        # label="Measured",
         alpha=0.6,
         s=10,
     )
 
-    ax1.scatter(
+    smooth_ax.scatter(
         x_input_female,
         y_raw_female,
         color="red",
-        # label="Measured Female",
         alpha=0.6,
         s=10,
     )
 
-    ax1.plot(
+    smooth_ax.plot(
         x_input_male,
         male_smoothed,
         color="#59f176",
@@ -146,7 +127,7 @@ def plot_bone_mineral_density():
         label="Male",
         solid_capstyle="round",
     )
-    ax1.plot(
+    smooth_ax.plot(
         x_input_female,
         female_smoothed,
         color="red",
@@ -154,8 +135,14 @@ def plot_bone_mineral_density():
         label="Female",
         solid_capstyle="round",
     )
-    ax1.legend()
-    plt.show()
+    smooth_ax.legend()
+    fig.tight_layout()
+    plt.savefig(
+        "cross_validation_article/bone_mineral_density.png",
+        dpi=800,
+        bbox_inches="tight",
+    )
+    plt.show(block=False)
 
 
 def plot_optical_spectra():
@@ -185,7 +172,6 @@ def plot_optical_spectra():
     )
     smoothed = optimal_smooth.get_optimal().get_smoothed()
 
-    (fig, ax1) = plt.subplots(figsize=(8, 4), facecolor="#00002a")
     (cross_validation_errors, smoothed_data, lambdas) = zip(
         *[
             (res.get_cross_validation_error(), res.get_smoothed(), res.get_lambda())
@@ -199,62 +185,89 @@ def plot_optical_spectra():
         )
     )
 
-    ax1.plot(
+    (fig, smooth_ax, cve_ax) = create_figure_and_axes()
+
+    cve_ax.plot(
         lambdas,
         cross_validation_errors,
-        color="#fc8d28",
+        color="red",
         label="Cross validation",
         marker=".",
         markersize=8,
     )
 
-    ax1.set_xscale("log")
-    ax1.set_yscale("log")
-    ax1.spines["bottom"].set_color(axis_color)
-    ax1.spines["top"].set_color(axis_color)
-    ax1.spines["right"].set_color(axis_color)
-    ax1.spines["left"].set_color(axis_color)
+    cve_ax.set_xscale("log")
+    # cve_ax.set_yscale("log")
+    cve_ax.spines["bottom"].set_color(axis_color)
+    cve_ax.spines["top"].set_color(axis_color)
+    cve_ax.spines["right"].set_color(axis_color)
+    cve_ax.spines["left"].set_color(axis_color)
+    cve_ax.set_xlabel("λ", color=axis_color, fontsize=16)
+    cve_ax.set_ylabel("CVE", color=axis_color, fontsize=14)
+    cve_ax.tick_params(
+        axis="y", direction="in", color=axis_color, labelcolor=axis_color
+    )
+    cve_ax.tick_params(
+        axis="x", direction="in", color=axis_color, labelcolor=axis_color
+    )
+    cve_ax.grid(True, ls="--", alpha=0.6)
 
-    ax1.tick_params(axis="y", direction="in", color=axis_color, labelcolor=axis_color)
-    ax1.tick_params(axis="x", direction="in", color=axis_color, labelcolor=axis_color)
-    ax1.grid(True, ls="--", alpha=0.6)
-    # ax1.set_xlim(1e1, 1e5)
-    ax1.set_facecolor("#00002a")
+    cve_ax.set_facecolor("#00002a")
     plt.show(block=False)
 
-    (fig, ax1) = plt.subplots(figsize=(8, 4), facecolor="#00002a")
-
-    ax1.spines["bottom"].set_color(axis_color)
-    ax1.spines["top"].set_color(axis_color)
-    ax1.spines["right"].set_color(axis_color)
-    ax1.spines["left"].set_color(axis_color)
-    ax1.set_xlabel("Wavelenghts / Ångströms", color=axis_color)
-    ax1.set_ylabel("Flux / [10-17 erg/cm2/s/Å]", color=axis_color)
-    ax1.tick_params(axis="y", direction="in", color=axis_color, labelcolor=axis_color)
-    ax1.tick_params(axis="x", direction="in", color=axis_color, labelcolor=axis_color)
-    ax1.grid(True, ls="--", alpha=0.6)
-    ax1.set_facecolor("#00002a")
-    # ax1.set_xlim(0, 50)
-    #
-    ax1.plot(
-        data.index,
-        data[col],
-        color="#fc8d28",
-        marker=".",
-        label="Measured",
-        alpha=0.6,
-        markersize=8,
+    smooth_ax.spines["bottom"].set_color(axis_color)
+    smooth_ax.spines["top"].set_color(axis_color)
+    smooth_ax.spines["right"].set_color(axis_color)
+    smooth_ax.spines["left"].set_color(axis_color)
+    smooth_ax.set_xlabel("Wavelenghts / Ångströms", color=axis_color, fontsize=14)
+    smooth_ax.set_ylabel("Flux / (10-17 erg/cm2/s/Å)", color=axis_color, fontsize=14)
+    smooth_ax.tick_params(
+        axis="y", direction="in", color=axis_color, labelcolor=axis_color
+    )
+    smooth_ax.tick_params(
+        axis="x", direction="in", color=axis_color, labelcolor=axis_color
     )
 
-    ax1.plot(
+    smooth_ax.grid(True, ls="--", alpha=0.6)
+    smooth_ax.set_facecolor("#00002a")
+    # ax1.set_xlim(0, 50)
+    #
+    smooth_ax.set_xlim(200, 2000)
+    smooth_ax.set_ylim(-0.5, 15)
+    smooth_ax.plot(
+        data.index,
+        data[col],
+        color="#59f176",
+        marker=".",
+        label="Measured",
+        alpha=0.5,
+        markersize=8,
+    )
+    # smooth_ax.scatter(
+    #     data.index,
+    #     data[col],
+    #     color="yellow",
+    #     # marker=".",
+    #     label="Measured",
+    #     alpha=0.75,
+    #     s=20,
+    # )
+
+    smooth_ax.plot(
         data.index,
         smoothed,
-        color="#59f176",
+        color="red",
         lw=2,
         label="Whittaker",
         solid_capstyle="round",
     )
-    plt.show()
+    fig.tight_layout()
+    plt.savefig(
+        "cross_validation_article/optical_spectra.png",
+        dpi=800,
+        bbox_inches="tight",
+    )
+    plt.show(block=False)
 
 
 def plot_humidity():
@@ -295,7 +308,6 @@ def plot_humidity():
     )
     smoothed = optimal_smooth.get_optimal().get_smoothed()
 
-    (fig, ax1) = plt.subplots(figsize=(8, 4), facecolor="#00002a")
     (cross_validation_errors, smoothed_data, lambdas) = zip(
         *[
             (res.get_cross_validation_error(), res.get_smoothed(), res.get_lambda())
@@ -309,62 +321,77 @@ def plot_humidity():
         )
     )
 
-    ax1.plot(
+    (fig, smooth_ax, cve_ax) = create_figure_and_axes()
+    cve_ax.plot(
         lambdas,
         cross_validation_errors,
-        color="#fc8d28",
+        color="red",
         label="Cross validation",
         marker=".",
         markersize=8,
     )
 
-    ax1.set_xscale("log")
-    ax1.set_yscale("log")
-    ax1.spines["bottom"].set_color(axis_color)
-    ax1.spines["top"].set_color(axis_color)
-    ax1.spines["right"].set_color(axis_color)
-    ax1.spines["left"].set_color(axis_color)
+    cve_ax.set_xscale("log")
 
-    ax1.tick_params(axis="y", direction="in", color=axis_color, labelcolor=axis_color)
-    ax1.tick_params(axis="x", direction="in", color=axis_color, labelcolor=axis_color)
-    ax1.grid(True, ls="--", alpha=0.6)
-    # ax1.set_xlim(1e1, 1e5)
-    ax1.set_facecolor("#00002a")
-    plt.show(block=False)
+    cve_ax.set_xlabel("λ", color=axis_color, fontsize=16)
+    cve_ax.set_ylabel("CVE", color=axis_color, fontsize=14)
 
-    (fig, ax1) = plt.subplots(figsize=(8, 4), facecolor="#00002a")
+    smooth_ax.set_xlabel("Year", color=axis_color, fontsize=14)
+    smooth_ax.set_ylabel("Absolute Humidity / (g/m3)", color=axis_color, fontsize=14)
 
-    ax1.spines["bottom"].set_color(axis_color)
-    ax1.spines["top"].set_color(axis_color)
-    ax1.spines["right"].set_color(axis_color)
-    ax1.spines["left"].set_color(axis_color)
-    ax1.set_xlabel("Year", color=axis_color)
-    ax1.set_ylabel("Temperature Anomaly / °C", color=axis_color)
-    ax1.tick_params(axis="y", direction="in", color=axis_color, labelcolor=axis_color)
-    ax1.tick_params(axis="x", direction="in", color=axis_color, labelcolor=axis_color)
-    ax1.grid(True, ls="--", alpha=0.6)
-    ax1.set_facecolor("#00002a")
-    # ax1.set_xlim(0, 50)
-    #
-    ax1.plot(
+    smooth_ax.set_ylim(0.6, 2.27)
+
+    # fig.autofmt_xdate()
+    smooth_ax.set_xlim(data["Date"].loc[4400], data["Date"].loc[4700])
+    smooth_ax.plot(
         data["Date"],
         np.where(nan_filter, np.nan, data[col]),
-        color="#fc8d28",
+        color="#59f176",
         marker=".",
         label="Measured",
         alpha=0.6,
         markersize=8,
     )
 
-    ax1.plot(
+    smooth_ax.plot(
         data["Date"],
         smoothed,
-        color="#59f176",
+        color="red",
         lw=2,
         label="Whittaker",
         solid_capstyle="round",
     )
+    fig.tight_layout()
+    # smooth_ax.xaxis.set_major_locator(mdates.DayLocator())
+    plt.savefig(
+        "cross_validation_article/absolute_humidity.png",
+        dpi=800,
+        bbox_inches="tight",
+    )
+
     plt.show()
+
+
+def create_figure_and_axes():
+    (fig, axes) = plt.subplots(
+        2, 1, figsize=(9, 6), facecolor="#00002a", gridspec_kw={"height_ratios": [3, 1]}
+    )
+
+    for ax in axes:
+        ax.spines["bottom"].set_color(axis_color)
+        ax.spines["top"].set_color(axis_color)
+        ax.spines["right"].set_color(axis_color)
+        ax.spines["left"].set_color(axis_color)
+        ax.tick_params(
+            axis="y", direction="in", color=axis_color, labelcolor=axis_color
+        )
+        ax.tick_params(
+            axis="x", direction="in", color=axis_color, labelcolor=axis_color
+        )
+        ax.grid(True, ls="--", alpha=0.6)
+        ax.set_facecolor("#00002a")
+
+    return (fig, axes[0], axes[1])
 
 
 if __name__ == "__main__":
