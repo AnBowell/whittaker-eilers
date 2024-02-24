@@ -171,9 +171,7 @@ import numpy as np
 x, y, y_with_noise = generate_data({})
 x, y, y_with_noise = x.tolist(), y.tolist(), y_with_noise.tolist()
 whittaker_smoother = WhittakerSmoother(lmbda=5e3, order=2, data_length=len(x))
-    """.format(
-        data_length
-    )
+    """.format(data_length)
 
     benchmark_code = """
 run_whittaker(whittaker_smoother, y_with_noise)
@@ -197,9 +195,7 @@ from __main__ import run_sav_golay, generate_data
 import numpy as np
 
 x, y, y_with_noise = generate_data({})
-    """.format(
-        data_length
-    )
+    """.format(data_length)
 
     benchmark_code = """
 run_sav_golay(y_with_noise)
@@ -223,9 +219,7 @@ from __main__ import run_lowess, generate_data
 import numpy as np
 
 x, y, y_with_noise = generate_data({})
-    """.format(
-        data_length
-    )
+    """.format(data_length)
 
     benchmark_code = """
 run_lowess(x, y_with_noise)
@@ -249,9 +243,7 @@ from __main__ import run_gauss, generate_data
 import numpy as np
 
 x, y, y_with_noise = generate_data({})
-    """.format(
-        data_length
-    )
+    """.format(data_length)
 
     benchmark_code = """
 run_gauss(y_with_noise)

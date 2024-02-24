@@ -103,6 +103,7 @@ fn smooth_and_interpolate(
     let raw_points = Scatter::new(x_input.clone(), y_input.to_vec())
         .mode(Mode::Markers)
         .name("Raw Wood Data");
+
     let smoothed_points = Scatter::new(x_input.clone(), smoothed_y_only)
         .mode(Mode::Lines)
         .name("Whittaker Smoothed With Weights");
@@ -116,6 +117,54 @@ fn smooth_and_interpolate(
     plot.show();
 }
 
+fn smooth_cross_validate(x_input: &Vec<f64>, y_input: &Vec<f64>, weights: &Vec<f64>, order: usize) {
+    let optimal_smooth_with_error =
+        WhittakerSmoother::new(100.0, order, y_input.len(), Some(x_input), Some(weights))
+            .unwrap()
+            .smooth_optimal(&y_input, true)
+            .unwrap();
+
+    let raw_points = Scatter::new(x_input.clone(), y_input.to_vec())
+        .mode(Mode::Markers)
+        .name("Raw Wood Data");
+    let smoothed_points = Scatter::new(
+        x_input.clone(),
+        optimal_smooth_with_error.get_optimal().smoothed,
+    )
+    .mode(Mode::Lines)
+    .name("Whittaker Optimally Smoothed");
+
+    let mut plot = Plot::new();
+    plot.add_trace(raw_points);
+    plot.add_trace(smoothed_points);
+
+    let layout = Layout::new().title("Whittaker optimal cross validation".into());
+    plot.set_layout(layout);
+    plot.show();
+
+    let smoothed_points = Scatter::new(
+        optimal_smooth_with_error
+            .validation_results
+            .iter()
+            .map(|x| x.lambda.log10())
+            .collect(),
+        optimal_smooth_with_error
+            .validation_results
+            .iter()
+            .map(|x| x.cross_validation_error)
+            .collect(),
+    )
+    .mode(Mode::Lines)
+    .name("Cross validation error");
+
+    let mut plot = Plot::new();
+
+    plot.add_trace(smoothed_points);
+
+    let layout = Layout::new().title("Cross Validation Error".into());
+    plot.set_layout(layout);
+    plot.show();
+}
 fn main() {
     let mut y_input = WOOD_DATASET.to_vec();
     let x_input = (0..y_input.len()).map(|x| x as f64).collect::<Vec<f64>>();
@@ -126,7 +175,7 @@ fn main() {
     let weights_distribution = Uniform::new(0.0, 1.0);
 
     let x_input_with_noise = (0..y_input.len())
-        .map(|x| (x as f64) + x_noise_distribution.sample(&mut rng)) //TODO! Check this is sampling each time
+        .map(|x| (x as f64) + x_noise_distribution.sample(&mut rng))
         .collect::<Vec<f64>>();
 
     let mut weights = weights_distribution
@@ -143,6 +192,8 @@ fn main() {
 
     smooth_with_weights(&x_input_with_noise, &y_input, &weights, lambda, order);
 
+    smooth_cross_validate(&x_input, &y_input, &weights, order);
+
     for i in 30..60 {
         y_input[i] = 0.0; // Set y to some arbitrary value we want to interpolate.
         weights[i] = 0.0; // Set weights to 0 for data we want to interpolate.
@@ -151,8 +202,6 @@ fn main() {
     smooth_and_interpolate(&x_input, &y_input, &weights, lambda, order);
 }
 
-/// Data from this repo:
-/// <https://github.com/mhvwerts/whittaker-eilers-smoother>
 pub const WOOD_DATASET: &[f64] = &[
     106.0, 111.0, 111.0, 107.0, 105.0, 107.0, 110.0, 108.0, 111.0, 119.0, 117.0, 107.0, 105.0,
     107.0, 109.0, 105.0, 104.0, 102.0, 108.0, 113.0, 113.0, 107.0, 103.0, 103.0, 98.0, 102.0,

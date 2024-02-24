@@ -1,5 +1,7 @@
+mod cross_validation;
 mod errors;
 mod whittaker_smoother;
+
 use pyo3::{pymodule, types::PyModule, PyResult, Python};
 use whittaker_smoother::WhittakerSmoother;
 
