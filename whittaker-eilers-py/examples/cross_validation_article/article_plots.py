@@ -19,7 +19,7 @@ def main():  #
 def plot_bone_mineral_density():
     # data = pd.read_csv("cross_validation_article/bone.data", delimiter=" ")
     data = pd.read_table("cross_validation_article/bone.data")
-
+    np.random.seed(9420)
     data["age"] += np.random.uniform(0.2, 0.3, len(data))
     data.sort_values(by="age", inplace=True)
 
@@ -97,7 +97,7 @@ def plot_bone_mineral_density():
     )
 
     cve_ax.set_xlabel("λ", color=axis_color, fontsize=16)
-    cve_ax.set_ylabel("CVE", color=axis_color, fontsize=14)
+    cve_ax.set_ylabel("RCVE", color=axis_color, fontsize=14)
     cve_ax.set_xscale("log")
 
     smooth_ax.set_xlabel("Age / year", color=axis_color, fontsize=14)
@@ -124,7 +124,7 @@ def plot_bone_mineral_density():
         male_smoothed,
         color="#59f176",
         lw=2,
-        label="Male",
+        label="Male: λ = {:.0f}".format(male_optimal_smooth.get_optimal().get_lambda()),
         solid_capstyle="round",
     )
     smooth_ax.plot(
@@ -132,7 +132,9 @@ def plot_bone_mineral_density():
         female_smoothed,
         color="red",
         lw=2,
-        label="Female",
+        label="Female: λ = {:.0f}".format(
+            female_optimal_smooth.get_optimal().get_lambda()
+        ),
         solid_capstyle="round",
     )
     smooth_ax.legend()
@@ -154,7 +156,7 @@ def plot_optical_spectra():
     # mask = data["and_mask"] > 65552
     data["weights"] = np.full(len(data), 1)
     # data["weights"][mask] = 0.0
-
+    wavelengths = 10 ** data["loglam"]
     smoother = WhittakerSmoother(
         5e1,
         2,
@@ -184,6 +186,9 @@ def plot_optical_spectra():
             lambdas[np.argmin(cross_validation_errors)]
         )
     )
+    final_residuals = data[col].to_numpy() - np.array(
+        optimal_smooth.get_optimal().get_smoothed()
+    )
 
     (fig, smooth_ax, cve_ax) = create_figure_and_axes()
 
@@ -203,7 +208,7 @@ def plot_optical_spectra():
     cve_ax.spines["right"].set_color(axis_color)
     cve_ax.spines["left"].set_color(axis_color)
     cve_ax.set_xlabel("λ", color=axis_color, fontsize=16)
-    cve_ax.set_ylabel("CVE", color=axis_color, fontsize=14)
+    cve_ax.set_ylabel("RCVE", color=axis_color, fontsize=14)
     cve_ax.tick_params(
         axis="y", direction="in", color=axis_color, labelcolor=axis_color
     )
@@ -232,10 +237,10 @@ def plot_optical_spectra():
     smooth_ax.set_facecolor("#00002a")
     # ax1.set_xlim(0, 50)
     #
-    smooth_ax.set_xlim(200, 2000)
+    smooth_ax.set_xlim(3800, 5000)
     smooth_ax.set_ylim(-0.5, 15)
     smooth_ax.plot(
-        data.index,
+        wavelengths,
         data[col],
         color="#59f176",
         marker=".",
@@ -254,13 +259,14 @@ def plot_optical_spectra():
     # )
 
     smooth_ax.plot(
-        data.index,
+        wavelengths,
         smoothed,
         color="red",
         lw=2,
-        label="Whittaker",
+        label="λ = {:.0f}".format(optimal_smooth.get_optimal().get_lambda()),
         solid_capstyle="round",
     )
+    smooth_ax.legend()
     fig.tight_layout()
     plt.savefig(
         "cross_validation_article/optical_spectra.png",
@@ -320,13 +326,15 @@ def plot_humidity():
             lambdas[np.argmin(cross_validation_errors)]
         )
     )
+    final_residuals = data[col].to_numpy() - np.array(
+        optimal_smooth.get_optimal().get_smoothed()
+    )
 
     (fig, smooth_ax, cve_ax) = create_figure_and_axes()
     cve_ax.plot(
         lambdas,
         cross_validation_errors,
         color="red",
-        label="Cross validation",
         marker=".",
         markersize=8,
     )
@@ -334,7 +342,7 @@ def plot_humidity():
     cve_ax.set_xscale("log")
 
     cve_ax.set_xlabel("λ", color=axis_color, fontsize=16)
-    cve_ax.set_ylabel("CVE", color=axis_color, fontsize=14)
+    cve_ax.set_ylabel("RCVE", color=axis_color, fontsize=14)
 
     smooth_ax.set_xlabel("Year", color=axis_color, fontsize=14)
     smooth_ax.set_ylabel("Absolute Humidity / (g/m3)", color=axis_color, fontsize=14)
@@ -358,9 +366,10 @@ def plot_humidity():
         smoothed,
         color="red",
         lw=2,
-        label="Whittaker",
+        label="λ = {:.0f}".format(optimal_smooth.get_optimal().get_lambda()),
         solid_capstyle="round",
     )
+    smooth_ax.legend()
     fig.tight_layout()
     # smooth_ax.xaxis.set_major_locator(mdates.DayLocator())
     plt.savefig(

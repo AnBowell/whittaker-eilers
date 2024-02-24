@@ -43,7 +43,7 @@ impl CrossValidationResult {
     pub fn get_smoothed(&self) -> Vec<f64> {
         self.0.smoothed.clone()
     }
-    /// The associated cross validation error for the smoothed data.
+    /// The associated cross validation error for the smoothed data. Technically square-rooted cross validation error.
     pub fn get_cross_validation_error(&self) -> f64 {
         self.0.cross_validation_error
     }

@@ -24,7 +24,7 @@ pub struct CrossValidationResult {
     pub lambda: f64,
     /// The smoothed data.
     pub smoothed: Vec<f64>,
-    /// The associated cross validation error for the smoothed data.
+    /// The associated cross validation error for the smoothed data. Technically square-rooted cross validation error.
     pub cross_validation_error: f64,
 }
 

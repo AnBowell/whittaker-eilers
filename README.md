@@ -5,7 +5,7 @@
 
 ```toml
 [dependencies]
-whittaker-eilers = "0.1.1"
+whittaker-eilers = "0.1.3"
 ```
 
 ## Usage

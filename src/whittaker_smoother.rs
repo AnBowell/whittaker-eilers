@@ -247,7 +247,7 @@ impl WhittakerSmoother {
 
     /// Run Whittaker-Eilers smoothing, interpolation and cross validation.
     ///
-    /// This function will run the smoother and assess the cross validation error on the result. This is defined in Eiler's
+    /// This function will run the smoother and assess the cross validation error on the result. This is defined in Eilers'
     /// 2003 paper: "A Perfect Smoother".  It involves computing the "hat matrix" or "smoother matrix" which inverses a sparse matrix. The
     /// inverse of a sparse matrix is usually dense, so this function will take much longer to run in comparison to just running `smooth`.
     ///
@@ -255,7 +255,7 @@ impl WhittakerSmoother {
     /// * `y_input`: The values which are to be smoothed and interpolated and have their cross validation error calculated.
     ///
     /// # Returns:
-    /// [CrossValidationResult]: The smoothed data, lambda it was smoothed at, and the cross validation error.
+    /// [CrossValidationResult]: The smoothed data, lambda it was smoothed at, and the cross validation error. Technically square-rooted cross validation error.
     pub fn smooth_and_cross_validate(
         &self,
         y_input: &[f64],
@@ -395,7 +395,7 @@ impl WhittakerSmoother {
                 hat_matrix *= DMatrix::from_diagonal(weights_vec.as_ref().unwrap());
             }
             let r = (y_input_dvec - smoothed_dvec)
-                .component_div(&(identity_dvec - hat_matrix.diagonal()));
+                .component_div(&(identity_dvec - hat_matrix.diagonal())); // TODO! Investigate using I - trace(hat_matrix)/ N. Can lead to less undersmoothing. Way to avoid solver/inverse?
 
             let cve = match weights_vec.as_ref() {
                 Some(weights) => (r.transpose() * r.component_mul(weights)).sum() / weights.sum(),

@@ -1,6 +1,18 @@
 use whittaker_eilers::WhittakerSmoother;
 
 #[test]
+fn test() {
+    use whittaker_eilers::WhittakerSmoother;
+
+    let data_to_smooth = vec![6.7, 8.0, 2.1, 8.4, 7.6, 3.4];
+
+    let mut smoother = WhittakerSmoother::new(2e4, 2, data_to_smooth.len(), None, None).unwrap();
+
+    let results = smoother.smooth_optimal(&data_to_smooth, false).unwrap();
+
+    println!("Optimal result: {:?}", results.get_optimal());
+}
+#[test]
 fn short_data() {
     let whittaker_smoother = WhittakerSmoother::new(2e4, 2, 2, None, None).unwrap();
 

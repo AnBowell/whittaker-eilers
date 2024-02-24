@@ -124,7 +124,7 @@ impl WhittakerSmoother {
     /// Returns
     /// -------
     ///
-    /// CrossValidationResult: The smoothed data, lambda it was smoothed at, and the cross validation error.
+    /// CrossValidationResult: The smoothed data, lambda it was smoothed at, and the cross validation error. Technically square-rooted cross validation error.
     pub fn smooth_and_cross_validate(&self, y_vals: Vec<f64>) -> PyResult<CrossValidationResult> {
         Ok(CrossValidationResult(
             self.0

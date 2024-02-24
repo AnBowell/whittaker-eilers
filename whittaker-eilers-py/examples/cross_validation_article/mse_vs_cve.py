@@ -10,6 +10,7 @@ data_length = 1000
 
 
 def main():
+    np.random.seed(9243)
     cve_fig, cve_axes = plt.subplots(
         2,
         2,
@@ -20,7 +21,16 @@ def main():
         gridspec_kw={"wspace": 0.15, "hspace": 0.15},
     )
     cve_axes_iter = iter(cve_axes.flatten())
-
+    pse_fig, mse_axes = plt.subplots(
+        2,
+        2,
+        figsize=(16, 8),
+        sharex=True,
+        # sharey=True,
+        facecolor=face_color,
+        gridspec_kw={"wspace": 0.15, "hspace": 0.15},
+    )
+    pse_axes_iter = iter(mse_axes.flatten())
     smoothed_fig, smoothed_axes = plt.subplots(
         2,
         2,
@@ -31,6 +41,9 @@ def main():
         gridspec_kw={"wspace": 0, "hspace": 0},
     )
     smoothed_axes_iter = iter(smoothed_axes.flatten())
+
+    root_mean_squared_errors_y = []
+    cross_validation_errors_x = []
 
     for counter, scale in enumerate([0.01, 0.1, 1.0, 5.0]):
         x, original_y, y_with_noise = generate_data(data_length, scale)
@@ -48,10 +61,16 @@ def main():
             ]
         )
 
-        actual_errors = [
-            np.sqrt(np.mean((original_y - np.array(series)) ** 2))
-            for series in smoothed_data
-        ]
+        actual_errors = np.array(
+            [
+                np.sqrt(np.mean((original_y - np.array(series)) ** 2))
+                for series in smoothed_data
+            ]
+        )
+
+        sigmas = np.array(
+            [np.mean((original_y - np.array(series)) ** 2) for series in smoothed_data]
+        )
 
         print(
             "Cross validation chosen lambda: {}".format(
@@ -62,20 +81,39 @@ def main():
         print("RMSE Chosen lambda: {}".format(lambdas[np.argmin(actual_errors)]))
 
         cve_ax = next(cve_axes_iter)
-        [spine.set_color(axis_color) for (_, spine) in cve_ax.spines.items()]
+        [spine.set_color(axis_color) for (_, spine) in cve_ax.spines.items()]  #
+        pse_ax = next(pse_axes_iter)
+        [spine.set_color(axis_color) for (_, spine) in pse_ax.spines.items()]
+
+        cve_plot = pse_ax.plot(
+            lambdas,
+            np.array(cross_validation_errors) ** 2,
+            color="#59f176",
+            label="RCVE",
+            marker=".",
+            markersize=8,
+        )
+        rmse_plot = pse_ax.plot(
+            lambdas,
+            actual_errors**2 + scale**2,
+            color="red",
+            label="RMSE",
+            marker=".",
+            markersize=8,
+        )
 
         cve_plot = cve_ax.plot(
             lambdas,
-            cross_validation_errors,
+            np.array(cross_validation_errors),
             color="#59f176",
-            label="CVE",
+            label="RCVE",
             marker=".",
             markersize=8,
         )
         ax2 = cve_ax.twinx()
         rmse_plot = ax2.plot(
             lambdas,
-            actual_errors,
+            np.array(actual_errors),
             color="red",
             label="RMSE",
             marker=".",
@@ -85,8 +123,18 @@ def main():
 
         ax2.tick_params(axis="y", direction="in", color="red", labelcolor=axis_color)
         ax2.tick_params(axis="x", direction="in", color="red", labelcolor=axis_color)
+
         ax2.yaxis.set_major_formatter(FormatStrFormatter("%.2f"))
         cve_ax.set_xscale("log")
+        pse_ax.set_xscale("log")
+
+        pse_ax.tick_params(
+            axis="y", direction="in", color=axis_color, labelcolor=axis_color
+        )
+        pse_ax.tick_params(
+            axis="x", direction="in", color=axis_color, labelcolor=axis_color
+        )
+
         cve_ax.yaxis.set_major_locator(MaxNLocator(nbins=4, integer=False))
         # cve_ax.set_yscale("log")
         cve_ax.yaxis.set_major_formatter(FormatStrFormatter("%.2f"))
@@ -97,9 +145,10 @@ def main():
             axis="x", direction="in", color="#59f176", labelcolor=axis_color
         )
         cve_ax.grid(True, ls="--", alpha=0.3, color="#59f176")
+        pse_ax.grid(True, ls="--", alpha=0.5)
         ax2.grid(True, ls="--", alpha=0.3, color="red")
         cve_ax.set_facecolor("#00002a")
-
+        pse_ax.set_facecolor("#00002a")
         smoothed_ax = next(smoothed_axes_iter)
         [spine.set_color(axis_color) for (_, spine) in smoothed_ax.spines.items()]
 
@@ -134,6 +183,9 @@ def main():
             solid_capstyle="round",
         )
 
+        root_mean_squared_errors_y.append(actual_errors)
+        cross_validation_errors_x.append(cross_validation_errors)
+
         match counter:
             case 0:
                 smoothed_ax.set_ylim(-1.25, 1.25)
@@ -141,7 +193,8 @@ def main():
                 lns = cve_plot + rmse_plot
                 labs = [l.get_label() for l in lns]
                 cve_ax.legend(lns, labs, fontsize=14)
-                cve_ax.set_ylabel("CVE", fontsize=14, color=axis_color)
+                cve_ax.set_ylabel("RCVE", fontsize=14, color=axis_color)
+
             case 1:
                 smoothed_ax.set_ylim(-1.25, 1.25)
                 # smoothed_ax.yaxis.set_label_position("right")
@@ -152,7 +205,7 @@ def main():
 
             case 2:
                 smoothed_ax.set_ylim(-10.0, 10.0)
-                cve_ax.set_ylabel("CVE", fontsize=14, color=axis_color)
+                cve_ax.set_ylabel("RCVE", fontsize=14, color=axis_color)
 
             case 3:
                 smoothed_ax.set_ylim(-10, 10)
@@ -185,6 +238,18 @@ def main():
         dpi=800,
         bbox_inches="tight",
     )
+    pse_fig.savefig(
+        "cross_validation_article/pse.png",
+        dpi=800,
+        bbox_inches="tight",
+    )
+    plt.show(block=False)
+
+    for cross_val, rmse in zip(cross_validation_errors_x, root_mean_squared_errors_y):
+        # ax1.scatter(cross_val, rmse)
+        print(np.corrcoef(cross_val, rmse))
+    # ax1.set_yscale("log")
+    # ax1.set_xscale("log")
     plt.show()
 
 
