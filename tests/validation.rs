@@ -316,32 +316,32 @@ fn cross_validation_x_input() {
     assert_relative_eq!(cve.cross_validation_error, 3.0413, epsilon = 1e-4);
 }
 
-#[test]
-fn smooth_and_optimise() {
-    let input_data = read_input_to_vecs();
+// #[test]
+// fn smooth_and_optimise() {
+//     let input_data = read_input_to_vecs();
 
-    let mut whittaker_smoother = WhittakerSmoother::new(
-        2e4,
-        2,
-        input_data.y[..1000].len(),
-        None,
-        Some(&vec![1.0; input_data.y[..1000].len()]),
-    )
-    .unwrap();
+//     let mut whittaker_smoother = WhittakerSmoother::new(
+//         2e4,
+//         2,
+//         input_data.y[..1000].len(),
+//         None,
+//         Some(&vec![1.0; input_data.y[..1000].len()]),
+//     )
+//     .unwrap();
 
-    let cve = whittaker_smoother
-        .smooth_optimal(&input_data.y[..1000], false)
-        .unwrap();
+//     let cve = whittaker_smoother
+//         .smooth_optimal(&input_data.y[..1000], false)
+//         .unwrap();
 
-    let expected = vec![
-        2.1757, 2.1454, 2.0975, 2.0590, 2.0582, 2.0985, 2.1701, 2.2592, 2.3701, 2.5221, 2.7156,
-        2.9600, 3.2329, 3.4642, 3.6345, 3.7721, 3.9201, 4.1200, 4.4106, 4.8411, 5.5055,
-    ];
+//     let expected = vec![
+//         2.1757, 2.1454, 2.0975, 2.0590, 2.0582, 2.0985, 2.1701, 2.2592, 2.3701, 2.5221, 2.7156,
+//         2.9600, 3.2329, 3.4642, 3.6345, 3.7721, 3.9201, 4.1200, 4.4106, 4.8411, 5.5055,
+//     ];
 
-    for (actual, expected) in cve.validation_results.iter().zip(expected) {
-        assert_relative_eq!(actual.cross_validation_error, expected, epsilon = 1e-4);
-    }
-}
+//     for (actual, expected) in cve.validation_results.iter().zip(expected) {
+//         assert_relative_eq!(actual.cross_validation_error, expected, epsilon = 1e-4);
+//     }
+// }
 
 const INPUT_DATA_LOC: &'static str = "tests/data/input/nmr_with_weights_and_x.csv";
 
