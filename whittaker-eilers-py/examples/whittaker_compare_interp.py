@@ -65,7 +65,7 @@ interpolated_data = interpolator(years)
 
 whit_temp_anom = whittaker_smoother.smooth(list(np.nan_to_num(temp_anom)))
 
-gauss_temp_anom = gaussian_filter1d(interpolated_data, 2.0, order=0)
+gauss_temp_anom = gaussian_filter1d(temp_anom, 2.0, order=0)
 
 sav_gol_temp_anom = savgol_filter(interpolated_data, window_length=35, polyorder=5)
 
