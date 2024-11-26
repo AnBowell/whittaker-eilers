@@ -224,8 +224,10 @@ def plot_optical_spectra():
     smooth_ax.spines["top"].set_color(axis_color)
     smooth_ax.spines["right"].set_color(axis_color)
     smooth_ax.spines["left"].set_color(axis_color)
-    smooth_ax.set_xlabel("Wavelenghts / Ångströms", color=axis_color, fontsize=14)
-    smooth_ax.set_ylabel("Flux / (10-17 erg/cm2/s/Å)", color=axis_color, fontsize=14)
+    smooth_ax.set_xlabel("Wavelength / Ångströms", color=axis_color, fontsize=14)
+    smooth_ax.set_ylabel(
+        "Flux / ($10^{-17}$ erg/$cm^2$/s/Å)", color=axis_color, fontsize=14
+    )
     smooth_ax.tick_params(
         axis="y", direction="in", color=axis_color, labelcolor=axis_color
     )
@@ -345,7 +347,7 @@ def plot_humidity():
     cve_ax.set_ylabel("RCVE", color=axis_color, fontsize=14)
 
     smooth_ax.set_xlabel("Year", color=axis_color, fontsize=14)
-    smooth_ax.set_ylabel("Absolute Humidity / (g/m3)", color=axis_color, fontsize=14)
+    smooth_ax.set_ylabel("Absolute Humidity / (g/$m^3$)", color=axis_color, fontsize=14)
 
     smooth_ax.set_ylim(0.6, 2.27)
 

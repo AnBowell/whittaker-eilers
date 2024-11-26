@@ -1,3 +1,4 @@
+[![Downloads](https://static.pepy.tech/badge/whittaker-eilers)](https://pepy.tech/project/whittaker-eilers) [![Downloads](https://static.pepy.tech/badge/whittaker-eilers/month)](https://pepy.tech/project/whittaker-eilers)
 # Whittaker-Eilers Smoothing and Interpolation
 **The Whittaker-Eilers smoother is the perfect smoother.** It offers extremely quick, efficient smoothing with built-in interpolation via weights on each measurement. This crate provides a sparse-matrix implementation for additional speed and memory efficiency and can handle both equally and unequally spaced measurements.
 
