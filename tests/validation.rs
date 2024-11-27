@@ -43,6 +43,50 @@ fn validate_standard_whittaker() {
 }
 
 #[test]
+#[cfg(feature = "rayon")]
+fn validate_standard_parallel_whittaker() {
+    let input_data = read_input_to_vecs();
+    let original_result_order_2 = read_output_to_vec("tests/data/output/output_only_y_2e4_2.csv");
+
+    let mut whittaker_smoother =
+        WhittakerSmoother::new(2e4, 2, input_data.y.len(), None, None).unwrap();
+
+    let multiple_series_input = [input_data.y.as_slice(); 5];
+
+    let rust_whittaker_out_vec_res = whittaker_smoother.smooth_parallel(&multiple_series_input);
+
+    let rust_whittaker_out_vec: Vec<&Vec<f64>> = rust_whittaker_out_vec_res
+        .iter()
+        .map(|x| x.as_ref().unwrap())
+        .collect();
+
+    for rust_whittaker_out in rust_whittaker_out_vec {
+        assert_eq!(original_result_order_2.len(), rust_whittaker_out.len());
+        for i in 0..original_result_order_2.len() {
+            assert_relative_eq!(
+                original_result_order_2[i],
+                rust_whittaker_out[i],
+                epsilon = 1e-8
+            )
+        }
+    }
+    let original_result_order_3 = read_output_to_vec("tests/data/output/output_only_y_2e4_3.csv");
+
+    whittaker_smoother.update_order(3).unwrap();
+
+    let rust_whittaker_out = whittaker_smoother.smooth(&input_data.y).unwrap();
+
+    assert_eq!(original_result_order_3.len(), rust_whittaker_out.len());
+    for i in 0..original_result_order_3.len() {
+        assert_relative_eq!(
+            original_result_order_3[i],
+            rust_whittaker_out[i],
+            epsilon = 1e-8
+        )
+    }
+}
+
+#[test]
 fn validated_weighted_whittaker() {
     let input_data = read_input_to_vecs();
     let original_result_weights =

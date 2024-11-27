@@ -1,6 +1,6 @@
 [package]
 name = "whittaker-eilers"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 
 description = "A sparse matrix implementation of Whittaker-Eilers smoothing and interpolation"
@@ -16,9 +16,12 @@ readme = "README.md"
 
 
 [dependencies]
+
 sprs = "0.11.1"
 sprs-ldl = "0.10.0"
 nalgebra = "0.32.3"
+rayon = { version = "1.10.0", optional = true }
+
 
 [dev-dependencies]
 plotly = "0.8.4"
@@ -34,3 +37,6 @@ harness = false
 
 [workspace]
 members = ["whittaker-eilers-py"]
+
+[features]
+rayon = ["dep:rayon"]

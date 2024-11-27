@@ -111,6 +111,29 @@ impl WhittakerSmoother {
         self.0.smooth(&y_vals).map_err(map_err_to_py)
     }
 
+    /// Run parallel Whittaker-Eilers smoothing and interpolation for multiple data series
+    ///
+    /// Convenience function to smooth many series in parallel. It should only be used when many series need to be smoothed with the same length, values of x,
+    /// weights, order, and lambda. If any parameters need to be changed, then the core Whittaker struct/class would need to be
+    /// mutated which makes parallel processing tough without cloning it repeatedly. At this point, it would be easier for the user to handle the parallelization!
+    ///
+    /// Will return None for any time series which result in errors. Run erroneous inputs through the standard smoothing function to diagnose errors.
+    ///
+    /// Parameters
+    /// ----------
+    /// vals_y : The list of lists of values which are to be smoothed and interpolated by the Whittaker-Eilers smoother.
+    ///
+    /// Returns
+    /// -------
+    /// The smoothed and interpolated data for each list. None when the smoothing fails.
+    pub fn smooth_parallel(&self, y_val_series: Vec<Vec<f64>>) -> Vec<Option<Vec<f64>>> {
+        self.0
+            .smooth_parallel(&y_val_series)
+            .into_iter()
+            .map(|e| e.ok()) // Can't return a pyresult inside a vec so have opted for an option, otherwise you could smooth 999999 series and have an error crash it on the very last one.
+            .collect()
+    }
+
     /// Run Whittaker-Eilers smoothing, interpolation and cross validation.
     ///
     /// This function will run the smoother and assess the cross validation error on the result. This is defined in Eiler's
