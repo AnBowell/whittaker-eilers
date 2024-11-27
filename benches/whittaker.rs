@@ -7,6 +7,17 @@ fn new_y_whittaker(y: &Vec<f64>) -> Vec<f64> {
         .smooth(y)
         .unwrap()
 }
+#[cfg(feature = "rayon")]
+fn new_parallel_y_whittaker(y: &Vec<Vec<f64>>) -> Vec<Vec<f64>> {
+    let smoother = WhittakerSmoother::new(2e4, 2, y[0].len(), None, None).unwrap();
+
+    smoother
+        .smooth_parallel(y)
+        .into_iter()
+        .map(|x| x.unwrap())
+        .collect()
+}
+
 fn new_y_whittaker_cross_validate(y: &Vec<f64>) -> CrossValidationResult {
     WhittakerSmoother::new(2e4, 2, y.len(), None, None)
         .unwrap()
@@ -35,8 +46,17 @@ fn new_x_y_weights_whittaker(x: &Vec<f64>, y: &Vec<f64>, weights: &Vec<f64>) -> 
 
 fn criterion_benchmark(c: &mut Criterion) {
     let wood_data_vec: Vec<f64> = WOOD_DATASET.to_vec();
+
     let wood_x_vec: Vec<f64> = (0..wood_data_vec.len()).map(|x| x as f64).collect();
+
     let weights = vec![1.0; wood_data_vec.len()];
+
+    let repeat_wood_data = (0..100000)
+        .into_iter()
+        .map(|_| wood_data_vec.clone())
+        .collect();
+
+    // let repeat_wood_data = [wood_data_vec.as_slice(); 100000];
 
     let reusable_smoother = WhittakerSmoother::new(
         2e4,
@@ -46,9 +66,11 @@ fn criterion_benchmark(c: &mut Criterion) {
         Some(&weights),
     )
     .unwrap();
+
     c.bench_function("Whittaker Wood Y Only", |b| {
         b.iter(|| new_y_whittaker(black_box(&wood_data_vec)))
     });
+
     c.bench_function("Whittaker Wood Cross validate", |b| {
         b.iter(|| new_y_whittaker_cross_validate(black_box(&wood_data_vec)))
     });
@@ -67,8 +89,14 @@ fn criterion_benchmark(c: &mut Criterion) {
             )
         })
     });
+
     c.bench_function("Whittaker Wood X, Y, and weights reused", |b| {
         b.iter(|| reusable_smoother.smooth(&wood_data_vec).unwrap())
+    });
+
+    #[cfg(feature = "rayon")]
+    c.bench_function("Whittaker Wood Y Only Parallel", |b| {
+        b.iter(|| new_parallel_y_whittaker(black_box(&repeat_wood_data)))
     });
 }
 criterion_group!(benches, criterion_benchmark);

@@ -8,6 +8,9 @@ use sprs::SymmetryCheck::CheckSymmetry;
 use sprs::{CsMat, CsMatView};
 use sprs_ldl::{Ldl, LdlNumeric};
 
+#[cfg(feature = "rayon")]
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+
 /// Whitaker-Eilers Smoother and Interpolator
 ///
 /// The smoother must be created via [WhittakerSmoother::new()] and once created, can be reused to smooth multiple sets of data as
@@ -243,6 +246,29 @@ impl WhittakerSmoother {
         } else {
             Ok(self.ldl.solve(y_input))
         };
+    }
+
+    /// Run parallel Whittaker-Eilers smoothing and interpolation for multiple data series
+    ///
+    /// Convenience function to smooth many series in parallel. It should only be used when many series need to be smoothed with the same length, values of x,
+    /// weights, order, and lambda. If any parameters need to be changed, then the core Whittaker struct would need to be
+    /// mutated which makes parallel processing tough without cloning it repeatedly. At this point, it would be easier for the user to handle the parallelization!
+    ///
+    /// # Arguments
+    /// * `y_inputs`: A vec or slice of vecs or slices which are to be smoothed and interpolated by the Whittaker-Eilers smoother.
+    ///
+    /// # Returns:
+    /// The smoothed and interpolated data as a vector of results.
+    #[cfg(feature = "rayon")]
+    pub fn smooth_parallel<'a, T>(&self, y_inputs: &'a [T]) -> Vec<Result<Vec<f64>, WhittakerError>>
+    where
+        [T]: IntoParallelRefIterator<'a>,
+        <[T] as IntoParallelRefIterator<'a>>::Item: AsRef<[f64]>,
+    {
+        y_inputs
+            .par_iter()
+            .map(|y_input| self.smooth(y_input.as_ref()))
+            .collect()
     }
 
     /// Run Whittaker-Eilers smoothing, interpolation and cross validation.

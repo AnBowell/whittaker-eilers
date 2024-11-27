@@ -35,8 +35,8 @@ class WhittakerSmoother:
         lmbda: float,
         order: int,
         data_length: int,
-        x_input: Optional[List] = None,
-        weights: Optional[List] = None,
+        x_input: Optional[List[float]] = None,
+        weights: Optional[List[float]] = None,
     ) -> None: ...
     def get_order(self) -> int:
         """Retrieve the smoother's current order."""
@@ -44,9 +44,11 @@ class WhittakerSmoother:
     def get_lambda(self) -> float:
         """Retrieve the smoother's current lambda."""
         ...
+
     def get_data_length(self) -> int:
         """Retrieve the smoother's current length."""
         ...
+
     def update_weights(self, weights: List) -> None:
         """Updates the weights of the data to be smoothed.
         The length of weights should be equal to that of the data you are to smooth. The values of the weights should fall between 0 and 1.
@@ -56,6 +58,7 @@ class WhittakerSmoother:
         weights : The weights of the measurements to be smoothed. The smaller the weight the more the measurement will be ignored. Setting a weight to 0 results in interpolation.
         """
         ...
+
     def update_order(self, order: int) -> None:
         """Updates the order of the Whittaker-Eilers smoother.
 
@@ -65,6 +68,7 @@ class WhittakerSmoother:
         ----------
         order : The order to smooth."""
         ...
+
     def update_lambda(self, lmbda: float) -> None:
         """Updates the smoothing constant `lambda` of the Whittaker-Eilers smoother.
 
@@ -75,7 +79,8 @@ class WhittakerSmoother:
         lmbda : The smoothing constant of the Whittaker-Eilers smoother.
         """
         ...
-    def smooth(self, y_vals: List[float]) -> List:
+
+    def smooth(self, y_vals: List[float]) -> List[float]:
         """Run Whittaker-Eilers smoothing and interpolation.
 
         This function actually runs the solver which results in the smoothed data. If you just wish to continuously smooth
@@ -89,6 +94,27 @@ class WhittakerSmoother:
         Returns
         -------
         The smoothed and interpolated data."""
+        ...
+
+    def smooth_parallel(
+        self, y_val_series: List[List[float]]
+    ) -> List[List[float] | None]:
+        """Run parallel Whittaker-Eilers smoothing and interpolation for multiple data series
+
+        Convenience function to smooth many series in parallel. It should only be used when many series need to be smoothed with the same length, values of x,
+        weights, order, and lambda. If any parameters need to be changed, then the core Whittaker struct/class would need to be
+        mutated which makes parallel processing tough without cloning it repeatedly. At this point, it would be easier for the user to handle the parallelization!
+
+        Will return None for any time series which result in errors. Run erroneous inputs through the standard smoothing function to diagnose errors.
+
+        Parameters
+        ----------
+        vals_y : The list of lists of values which are to be smoothed and interpolated by the Whittaker-Eilers smoother.
+
+        Returns
+        -------
+        The smoothed and interpolated data for each list. None when the smoothing fails.
+        """
         ...
 
     def smooth_and_cross_validate(self, y_vals: List[float]) -> CrossValidationResult:
