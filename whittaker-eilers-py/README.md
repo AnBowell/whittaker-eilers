@@ -125,7 +125,7 @@ print("Optimally smoothed data: {}".format(optimal_smooth.get_optimal().get_smoo
 
 ### Parallel Smoothing
 
-With this package you're able to smooth multiple data series in parallel. While Y, the data to be smoothed can vary, x, weights, and the other smoothing parameters cannot be varied.
+With this package you're able to smooth multiple data series in parallel. While y, the data to be smoothed can vary, x, weights, and the other smoothing parameters cannot be varied across the different data series.
 
 ```python
 y = [[1.2, 4.5, 6.5, 3.2, 1.23, 23.23, 231.23]] * 10

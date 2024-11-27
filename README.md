@@ -118,7 +118,7 @@ println!("Optimal result: {:?}", results.get_optimal());
 
 ### Parallel Smoothing
 
-Using the feature `rayon` enables this package to smooth multiple data series in parallel. While Y, the data to be smoothed can vary, x, weights, and the other smoothing parameters cannot be varied.
+Using the feature `rayon` enables this package to smooth multiple data series in parallel. While y, the data to be smoothed can vary, x, weights, and the other smoothing parameters cannot be varied across the different data series.
 
 ```rust
 use whittaker_eilers::WhittakerSmoother;
