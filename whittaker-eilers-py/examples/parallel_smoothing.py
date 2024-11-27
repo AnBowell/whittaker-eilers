@@ -5,7 +5,7 @@ from time import perf_counter
 import numpy as np
 
 
-NUMBER_OF_SERIES = 500000
+NUMBER_OF_SERIES = 100000
 
 
 def main():
@@ -37,7 +37,7 @@ def smooth_only_y(y):
 
 def smooth_y_with_x(x, y):
     whittaker_smoother = WhittakerSmoother(
-        lmbda=20, order=2, data_length=len(y), x_input=x
+        lmbda=90000, order=3, data_length=len(y), x_input=x
     )
 
     many_inputs = [y] * NUMBER_OF_SERIES
@@ -62,7 +62,7 @@ def smooth_y_with_x_and_weights(x, y):
     weights[::5] = 0.0
 
     whittaker_smoother = WhittakerSmoother(
-        lmbda=20, order=2, data_length=len(y), x_input=x, weights=weights
+        lmbda=20, order=2, data_length=len(y), x_input=x, weights=weights.tolist()
     )
     many_inputs = [y] * NUMBER_OF_SERIES
 

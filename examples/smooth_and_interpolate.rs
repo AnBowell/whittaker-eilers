@@ -20,7 +20,7 @@ fn basic_smooth(x_input: &Vec<f64>, y_input: &Vec<f64>, lambda: f64, order: usiz
     plot.add_trace(raw_points);
     plot.add_trace(smoothed_points);
 
-    let layout = Layout::new().title("Basic smoothing of equally spaced Y".into());
+    let layout = Layout::new().title("Basic smoothing of equally spaced Y");
     plot.set_layout(layout);
 
     plot.show();
@@ -49,7 +49,7 @@ fn smooth_with_x(x_input_with_noise: &Vec<f64>, y_input: &Vec<f64>, lambda: f64,
     plot.add_trace(raw_points);
     plot.add_trace(smoothed_points);
 
-    let layout = Layout::new().title("Basic smoothing of Y with arbitrary X".into());
+    let layout = Layout::new().title("Basic smoothing of Y with arbitrary X");
     plot.set_layout(layout);
     plot.show();
 }
@@ -83,7 +83,7 @@ fn smooth_with_weights(
     plot.add_trace(raw_points);
     plot.add_trace(smoothed_points);
 
-    let layout = Layout::new().title("Basic smoothing of Y with arbitrary X and weights".into());
+    let layout = Layout::new().title("Basic smoothing of Y with arbitrary X and weights");
     plot.set_layout(layout);
     plot.show();
 }
@@ -112,7 +112,7 @@ fn smooth_and_interpolate(
     plot.add_trace(raw_points);
     plot.add_trace(smoothed_points);
 
-    let layout = Layout::new().title("Smoothing and Interpolation using weights".into());
+    let layout = Layout::new().title("Smoothing and Interpolation using weights");
     plot.set_layout(layout);
     plot.show();
 }
@@ -138,7 +138,7 @@ fn smooth_cross_validate(x_input: &Vec<f64>, y_input: &Vec<f64>, weights: &Vec<f
     plot.add_trace(raw_points);
     plot.add_trace(smoothed_points);
 
-    let layout = Layout::new().title("Whittaker optimal cross validation".into());
+    let layout = Layout::new().title("Whittaker optimal cross validation");
     plot.set_layout(layout);
     plot.show();
 
@@ -161,7 +161,7 @@ fn smooth_cross_validate(x_input: &Vec<f64>, y_input: &Vec<f64>, weights: &Vec<f
 
     plot.add_trace(smoothed_points);
 
-    let layout = Layout::new().title("Cross Validation Error".into());
+    let layout = Layout::new().title("Cross Validation Error");
     plot.set_layout(layout);
     plot.show();
 }

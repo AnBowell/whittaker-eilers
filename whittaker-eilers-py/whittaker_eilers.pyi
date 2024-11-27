@@ -35,8 +35,8 @@ class WhittakerSmoother:
         lmbda: float,
         order: int,
         data_length: int,
-        x_input: Optional[List] = None,
-        weights: Optional[List] = None,
+        x_input: Optional[List[float]] = None,
+        weights: Optional[List[float]] = None,
     ) -> None: ...
     def get_order(self) -> int:
         """Retrieve the smoother's current order."""
@@ -80,7 +80,7 @@ class WhittakerSmoother:
         """
         ...
 
-    def smooth(self, y_vals: List[float]) -> List:
+    def smooth(self, y_vals: List[float]) -> List[float]:
         """Run Whittaker-Eilers smoothing and interpolation.
 
         This function actually runs the solver which results in the smoothed data. If you just wish to continuously smooth
@@ -96,7 +96,9 @@ class WhittakerSmoother:
         The smoothed and interpolated data."""
         ...
 
-    def smooth_parallel(self, y_val_series: List[List[float]]) -> List[List]:
+    def smooth_parallel(
+        self, y_val_series: List[List[float]]
+    ) -> List[List[float] | None]:
         """Run parallel Whittaker-Eilers smoothing and interpolation for multiple data series
 
         Convenience function to smooth many series in parallel. It should only be used when many series need to be smoothed with the same length, values of x,

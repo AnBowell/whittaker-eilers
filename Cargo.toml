@@ -1,6 +1,6 @@
 [package]
 name = "whittaker-eilers"
-version = "0.1.4"
+version = "0.2.0"
 edition = "2021"
 
 description = "A sparse matrix implementation of Whittaker-Eilers smoothing and interpolation"
@@ -17,14 +17,14 @@ readme = "README.md"
 
 [dependencies]
 
-sprs = "0.11.1"
+sprs = "0.11.2"
 sprs-ldl = "0.10.0"
-nalgebra = "0.32.3"
+nalgebra = "0.33.2"
 rayon = { version = "1.10.0", optional = true }
 
 
 [dev-dependencies]
-plotly = "0.8.4"
+plotly = "0.10.0"
 approx = "0.5.1"
 criterion = "0.5.1"
 rand = "0.8.5"

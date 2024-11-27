@@ -30,7 +30,7 @@ pub struct WhittakerSmoother(WhittakerSmootherRs);
 #[pymethods]
 impl WhittakerSmoother {
     #[new]
-    // #[pyo3(signature = (lmbda, order, data_length, x_input, weights), text_signature = "(lmbda, order, data_length, x_input, weights)")]
+    #[pyo3(signature = (lmbda, order, data_length, x_input=None, weights=None))]
     pub fn __init__(
         lmbda: f64, // Lambda is a key word in python
         order: usize,
