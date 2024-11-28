@@ -6,11 +6,6 @@
 
 ---
 
-```toml
-[dependencies]
-whittaker-eilers = "0.2.0"
-```
-
 ## Usage
 
 To start smoothing and interpolating data, create a reusable WhittakerSmoother struct via the `new` function. You'll only need to recreate this struct if the length or sampling rate of your data changes.
