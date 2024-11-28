@@ -8,7 +8,7 @@
 
 ```toml
 [dependencies]
-whittaker-eilers = "0.1.3"
+whittaker-eilers = "0.2.0"
 ```
 
 ## Usage
