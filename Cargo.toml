@@ -16,7 +16,7 @@ readme = "README.md"
 
 
 [dependencies]
-
+faer = "0.22.0"
 sprs = "0.11.2"
 sprs-ldl = "0.10.0"
 nalgebra = "0.33.2"

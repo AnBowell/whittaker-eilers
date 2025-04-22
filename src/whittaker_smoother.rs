@@ -1,6 +1,10 @@
 use crate::cross_validation::every_fifth_element;
 use crate::errors::WhittakerError;
 use crate::{CrossValidationResult, OptimisedSmoothResult, WHITTAKER_X_EPSILON};
+
+use faer::sparse::csr_numeric::generic::SparseRowMat;
+use faer::sparse::csr_symbolic::generic::SymbolicSparseRowMat;
+use faer::sparse::{csr_numeric, csr_symbolic};
 use nalgebra::{DMatrix, DVector};
 
 use sprs::FillInReduction::ReverseCuthillMcKee;
@@ -54,6 +58,8 @@ impl WhittakerSmoother {
         weights: Option<&Vec<f64>>,
     ) -> Result<WhittakerSmoother, WhittakerError> {
         let e_mat: CsMat<f64> = CsMat::eye(data_length);
+        let diags = (0..data_length + 1).collect::<Vec<usize>>();
+        // let e_mat = SparseRowMat::try_new_from_triplets(SymbolicSparseColMat:: )
 
         if data_length < order {
             return Err(WhittakerError::DataTooShort(data_length, order));
@@ -565,4 +571,37 @@ fn diff_no_ddmat(e: &CsMat<f64>, d: usize) -> CsMat<f64> {
     } else {
         return diff_no_ddmat(&diff(e), d - 1);
     }
+}
+
+fn faer_diff(e: SparseRowMat<csr_numeric::Own<usize, f64, usize, usize>>) {
+    let x = e[(0, 0)];
+}
+
+/// Create identity sparse matrix.
+pub fn eye(dim: usize) -> SparseRowMat<csr_numeric::Own<usize, f64, usize, usize>> {
+    // Row pointer: CSR format requires row_ptr to be length nrows + 1
+    // For an identity matrix, each row has 1 non-zero element
+    let mut row_ptr = Vec::with_capacity(dim + 1);
+    for i in 0..=dim {
+        row_ptr.push(i);
+    }
+
+    // row_nnz: number of non-zeros per row, always 1 for identity matrix
+    let row_nnz = vec![1; dim];
+
+    // col_idx: diagonal elements only, so 0, 1, ..., n-1
+    let col_idx: Vec<usize> = (0..dim).collect();
+
+    // Create the symbolic sparse matrix
+    let x = SymbolicSparseRowMat::<csr_symbolic::Own<usize, usize, usize>>::new_checked(
+        dim,
+        dim,
+        row_ptr.into(),
+        row_nnz.into(),
+        col_idx.into(),
+    );
+
+    let y = SparseRowMat::<csr_numeric::Own<usize, f64, usize, usize>>::new(x, vec![1.0; dim]);
+
+    return y;
 }
